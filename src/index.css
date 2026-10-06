@@ -18,6 +18,7 @@
 html,
 body {
   overscroll-behavior-y: none;
+  scrollbar-gutter: stable;
 }
 
 body {
