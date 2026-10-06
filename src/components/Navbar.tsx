@@ -1,5 +1,5 @@
 import { NavLink } from "react-router";
-import { Home, Film, Tv } from "lucide-react";
+import { Home, Film, Tv, User, Search } from "lucide-react";
 
 const NAVLINKS = [
   { id: 1, name: "home", icon: Home, href: "/" },
@@ -12,7 +12,7 @@ function Navbar() {
     <header className="fixed z-30 max-w-screen-md w-full top-4 inset-x-0 bottom-auto mx-auto bg-black/80 border border-white/20 rounded-full p-3 px-8">
       <nav className="flex items-center gap-6">
         <span>temuflix</span>
-        <ul className="flex items-center gap-2">
+        <ul className="flex items-center gap-2 flex-1">
           {NAVLINKS.map((item) => {
             const Icon = item.icon;
             return (
@@ -30,6 +30,12 @@ function Navbar() {
             );
           })}
         </ul>
+        <button>
+          <Search />
+        </button>
+        <button>
+          <User />
+        </button>
       </nav>
     </header>
   );
