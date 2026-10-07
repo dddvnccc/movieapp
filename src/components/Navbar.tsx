@@ -15,7 +15,10 @@ function Navbar() {
   return (
     <>
       <Portal>
-        <SearchModal handleClose={() => setIsModalActive(false)} isActive={isModalActive} />
+        <SearchModal
+          handleClose={() => setIsModalActive(false)}
+          isActive={isModalActive}
+        />
       </Portal>
       <header className="fixed z-30 max-w-screen-md w-full top-4 inset-x-0 bottom-auto mx-auto bg-black/80 border border-white/20 rounded-full p-3 px-8">
         <nav className="flex items-center gap-6">

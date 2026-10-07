@@ -18,7 +18,7 @@ export function formatDate(date: string) {
   });
 }
 
-export function formatVoteCount(vote_count: string) {
+export function formatVoteCount(vote_count: number) {
   vote_count = String(vote_count);
   if (vote_count.length === 3) {
     return vote_count.slice(0, 1);
@@ -40,5 +40,5 @@ export function formatCurrency(amount: number) {
 }
 
 export const getGenreList = (genreIds: number[], unique_genre: Genre[]) => {
-  return unique_genre.filter((unique) => (genreIds)?.includes(unique.id));
+  return unique_genre.filter((unique) => genreIds?.includes(unique.id));
 };

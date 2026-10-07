@@ -4,7 +4,7 @@ import { getGenreList, ratingBackground } from "../utils/utils";
 import { getTrending } from "../utils/fetch";
 import { IMAGE_CONFIG } from "../utils/config";
 import { useQuery } from "@tanstack/react-query";
-import { useOutletContext } from "react-router";
+import { data, useOutletContext } from "react-router";
 import { Info } from "lucide-react";
 import Rating from "./Rating";
 import HorizontalCard from "./HorizontalCard";
@@ -39,6 +39,7 @@ function Hero() {
   const firstGenre = getGenreList(genre_ids ?? [], uniqueGenre)[0];
 
   useEffect(() => {
+    if (!trendingAll) return
     const indexTimer = setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % MAX_DATA);
     }, 10000);
@@ -46,7 +47,7 @@ function Hero() {
     return () => {
       clearTimeout(indexTimer);
     };
-  }, [currentIndex]);
+  }, [currentIndex, trendingAll]);
 
   return (
     <section className="h-screen relative bg-black">
