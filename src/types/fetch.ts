@@ -116,8 +116,12 @@ export interface DetailShow {
   vote_average: number;
   vote_count: number;
   spoken_languages: SpokenLanguage[];
+  videos: VideosResult | null;
 }
 
+interface VideosResult {
+  results: DetailVideo[];
+}
 export interface DetailMovie extends DetailShow {
   belongs_to_collection: Collection[];
   budget: number;
@@ -228,4 +232,78 @@ export interface NextEpisodeToAir {
   still_path: string;
   vote_average: number;
   vote_count: number;
+}
+
+export interface DetailVideo {
+  id: string;
+  iso_639_1: string;
+  iso_3166_1: string;
+  key: string;
+  name: string;
+  official: boolean;
+  published_at: string;
+  site: string;
+  size: number;
+  type: string;
+}
+
+export interface ShowCredit {
+id
+:number
+cast: Cast[]
+crew: Crew[]
+}
+
+export interface Cast {
+adult
+:boolean
+gender
+:number
+id
+:number
+known_for_department
+:string
+name
+:string
+original_name
+:string
+popularity
+:number
+profile_path
+:string
+cast_id
+:number
+character
+:string
+credit_id
+:string
+order
+:number
+
+}
+
+export interface Crew {
+adult
+:boolean
+
+gender
+:number
+id
+:number
+known_for_department
+:string
+name
+:string
+original_name
+:string
+popularity
+:number
+profile_path
+:string
+credit_id
+:string
+department
+:string
+job
+:string
 }

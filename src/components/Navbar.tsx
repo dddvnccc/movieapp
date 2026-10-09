@@ -20,7 +20,7 @@ function Navbar() {
           isActive={isModalActive}
         />
       </Portal>
-      <header className="fixed z-30 max-w-screen-md w-full top-4 inset-x-0 bottom-auto mx-auto bg-black/80 border border-white/20 rounded-full p-3 px-8">
+      <header className="fixed z-50 max-w-screen-md w-full top-4 inset-x-0 bottom-auto mx-auto bg-black/80 border border-white/20 rounded-full p-3 px-8">
         <nav className="flex items-center gap-6">
           <span>temuflix</span>
           <ul className="flex items-center gap-2 flex-1">

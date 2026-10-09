@@ -1,6 +1,6 @@
 import { type Genre } from "../types/fetch";
 export function ratingBackground(score: number) {
-  return score <= 4 ? "red" : score < 7 ? "orange" : "green";
+  return score <= 4 ? "red" : score <= 6 ? "orange" : "green";
 }
 
 export function generateRuntime(runtime: number) {
@@ -18,7 +18,7 @@ export function formatDate(date: string) {
   });
 }
 
-export function formatVoteCount(vote_count: number) {
+export function formatVoteCount(vote_count: string) {
   vote_count = String(vote_count);
   if (vote_count.length === 3) {
     return vote_count.slice(0, 1);

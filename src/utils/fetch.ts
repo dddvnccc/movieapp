@@ -8,6 +8,7 @@ import type {
   DetailMovie,
   DetailTv,
   ShowType,
+  ShowCredit,
 } from "../types/fetch";
 
 const headers = {
@@ -84,7 +85,7 @@ export async function getDetailShow(
 ): Promise<DetailMovie | DetailTv> {
   const options = {
     method: "GET",
-    url: `https://api.themoviedb.org/3/${media_type}/${show_id}`,
+    url: `https://api.themoviedb.org/3/${media_type}/${show_id}?append_to_response=videos`,
     params: { language: "en-US" },
     headers,
   };
@@ -96,5 +97,23 @@ export async function getDetailShow(
   } catch (error) {
     console.error(error);
     throw error;
+  }
+}
+
+export async function getShowCredit(show_type: ShowType, show_id: number):Promise<ShowCredit> {
+  const options = {
+    method: "GET",
+    url: `https://api.themoviedb.org/3/${show_type}/${show_id}/credits`,
+    params: { language: "en-US" },
+    headers,
+  };
+
+  try {
+    const { data } = await axios.request<ShowCredit>(options);
+    console.log(data);
+    return data
+  } catch (error) {
+    console.error(error);
+    throw error
   }
 }

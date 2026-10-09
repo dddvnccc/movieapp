@@ -21,10 +21,7 @@ export const Layout = () => {
 
   return (
     <div
-      style={{
-        backgroundImage: `url(https://static.vecteezy.com/system/resources/thumbnails/060/843/811/small/close-up-of-raindrops-on-leaves-hd-background-luxury-hd-wallpaper-image-trendy-background-illustration-free-photo.jpg)`,
-      }}
-      className="bg-no-repeat flex flex-col bg-cover bg-center bg-fixed"
+      style={{background: 'red'}}
     >
       <Navbar />
       <main>

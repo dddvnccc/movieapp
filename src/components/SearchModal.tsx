@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { searchShow } from "../utils/fetch";
 import { Search } from "lucide-react";
 import { Film, Tv } from "lucide-react";
+import { Link } from "react-router";
 interface SearchModalProps {
   isActive: boolean;
   handleClose: () => void;
@@ -82,42 +83,48 @@ function SearchModal({ isActive, handleClose }: SearchModalProps) {
               {searchData?.results.slice(0, 10).map((item) => (
                 <li
                   key={item.id}
-                  className="flex items-center gap-4 first:mt-4 last:mb-6 hover:bg-white/20 border border-transparent hover:border-white/40 rounded-lg mr-4 p-2"
+                  className="first:mt-4 last:mb-6 hover:bg-white/20 border border-transparent hover:border-white/40 rounded-lg mr-4 p-2"
                 >
-                  {!item.poster_path ? (
-                    <div className="bg-white/20 w-12 h-14 rounded text-white/40 flex items-center justify-center">
-                      {item.media_type === "movie" ? <Film /> : <Tv />}
-                    </div>
-                  ) : (
-                    <img
-                      className="w-16 h-20 object-cover rounded"
-                      src={IMAGE_CONFIG.base_url + "w92" + item.poster_path}
-                    />
-                  )}
-                  <div className="flex flex-col gap-1">
-                    <h3 className="font-semibold tracking-wide line-clamp-2 text-sm">
-                      {item.media_type === "tv"
-                        ? item.name
-                        : item.media_type === "movie"
-                          ? item.title
-                          : ""}
-                    </h3>
-                    <div className="flex items-center text-xs gap-4 font-light uppercase text-slate-300">
-                      <span className="tracking-wide">
+                  <Link
+                  onClick={handleClose}
+                    className="flex items-center gap-4"
+                    to={`/discover/${item.media_type}/detail/${item.id}`}
+                  >
+                    {!item.poster_path ? (
+                      <div className="bg-white/20 w-12 h-14 rounded text-white/40 flex items-center justify-center">
+                        {item.media_type === "movie" ? <Film /> : <Tv />}
+                      </div>
+                    ) : (
+                      <img
+                        className="w-16 h-20 object-cover rounded"
+                        src={IMAGE_CONFIG.base_url + "w92" + item.poster_path}
+                      />
+                    )}
+                    <div className="flex flex-col gap-1">
+                      <h3 className="font-semibold tracking-wide line-clamp-2 text-sm">
                         {item.media_type === "tv"
-                          ? "tv series"
-                          : item.media_type}
-                      </span>
-                      <span>
-                        {(item.media_type === "tv"
-                          ? item.first_air_date
+                          ? item.name
                           : item.media_type === "movie"
-                            ? item.release_date
-                            : ""
-                        ).split("-")[0] || "-"}
-                      </span>
+                            ? item.title
+                            : ""}
+                      </h3>
+                      <div className="flex items-center text-xs gap-4 font-light uppercase text-slate-300">
+                        <span className="tracking-wide">
+                          {item.media_type === "tv"
+                            ? "tv series"
+                            : item.media_type}
+                        </span>
+                        <span>
+                          {(item.media_type === "tv"
+                            ? item.first_air_date
+                            : item.media_type === "movie"
+                              ? item.release_date
+                              : ""
+                          ).split("-")[0] || "-"}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 </li>
               ))}
             </ul>
