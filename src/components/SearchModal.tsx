@@ -101,19 +101,19 @@ function SearchModal({ isActive, handleClose }: SearchModalProps) {
                       />
                     )}
                     <div className="flex flex-col gap-1">
-                      <h3 className="font-semibold tracking-wide line-clamp-2 text-sm">
+                      <h3 className="font-semibold tracking-wide line-clamp-2">
                         {item.media_type === "tv"
                           ? item.name
                           : item.media_type === "movie"
                             ? item.title
                             : ""}
                       </h3>
-                      <div className="flex items-center text-xs gap-4 font-light uppercase text-slate-300">
+                      <div className="flex items-center text-sm gap-2 font-semibold uppercase text-neutral-400">
                         <span className="tracking-wide">
                           {item.media_type === "tv"
                             ? "tv series"
                             : item.media_type}
-                        </span>
+                        </span>|
                         <span>
                           {(item.media_type === "tv"
                             ? item.first_air_date

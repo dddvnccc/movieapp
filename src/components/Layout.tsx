@@ -21,7 +21,6 @@ export const Layout = () => {
 
   return (
     <div
-      style={{background: 'red'}}
     >
       <Navbar />
       <main>

@@ -100,7 +100,10 @@ export async function getDetailShow(
   }
 }
 
-export async function getShowCredit(show_type: ShowType, show_id: number):Promise<ShowCredit> {
+export async function getShowCredit(
+  show_type: ShowType,
+  show_id: number,
+): Promise<ShowCredit> {
   const options = {
     method: "GET",
     url: `https://api.themoviedb.org/3/${show_type}/${show_id}/credits`,
@@ -111,7 +114,25 @@ export async function getShowCredit(show_type: ShowType, show_id: number):Promis
   try {
     const { data } = await axios.request<ShowCredit>(options);
     console.log(data);
-    return data
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
+export async function getRecommendation(show_type: ShowType, show_id: number):Promise<TrendingResponse> {
+  const options = {
+    method: "GET",
+    url: `https://api.themoviedb.org/3/${show_type}/${show_id}/recommendations`,
+    params: { language: "en-US", page: "1" },
+    headers,
+  };
+
+  try {
+    const { data } = await axios.request<TrendingResponse>(options);
+    console.log(data);
+    return data;
   } catch (error) {
     console.error(error);
     throw error
