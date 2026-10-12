@@ -2,13 +2,14 @@ import React, { useEffect } from "react";
 import { IMAGE_CONFIG } from "../../utils/config";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router";
-import type { ShowType } from "../../types/fetch";
+import type { ShowType, Collection } from "../../types/fetch";
 import {
   getDetailShow,
   getShowCredit,
-  getRecommendation,
+  getExtra,
+  getCollectionDetail,
 } from "../../utils/fetch";
-import { Plus, Star, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Film, Plus, Star, ThumbsDown, ThumbsUp, Tv } from "lucide-react";
 import {
   generateRuntime,
   formatDate,
@@ -30,6 +31,21 @@ function DetailShow() {
     staleTime: Infinity,
   });
 
+  const isMovie = detailData && "title" in detailData;
+  const isTv = detailData && "name" in detailData;
+
+  const collection: Collection | undefined =
+    isMovie && detailData?.belongs_to_collection
+      ? detailData.belongs_to_collection
+      : undefined;
+
+  const { data: collectionData } = useQuery({
+    queryKey: ["collection", collection?.id],
+    queryFn: () => getCollectionDetail(collection?.id ?? 0),
+    enabled: !!collection,
+    staleTime: Infinity,
+  });
+
   const { data: creditData } = useQuery({
     queryKey: ["credit", media_type, show_id],
     queryFn: () => {
@@ -40,7 +56,7 @@ function DetailShow() {
 
   const { data: recommendationData } = useQuery({
     queryKey: ["recommendation", media_type, show_id],
-    queryFn: () => getRecommendation(media_type, Number(show_id)),
+    queryFn: () => getExtra("recommendations", media_type, Number(show_id)),
     staleTime: Infinity,
   });
 
@@ -54,8 +70,6 @@ function DetailShow() {
     homepage,
     status,
   } = detailData || {};
-  const isMovie = detailData && "title" in detailData;
-  const isTv = detailData && "name" in detailData;
   const title = isMovie ? detailData?.title : detailData?.name;
   const releaseDate = isMovie
     ? detailData?.release_date
@@ -87,24 +101,33 @@ function DetailShow() {
         src={IMAGE_CONFIG.base_url + "w1280" + backdrop_path}
         className="fixed inset-0 h-full object-cover w-full"
       />
-      <div className="relative bg-black/80 backdrop-blur-xl">
-        <div className="absolute inset-0 z-0 h-screen">
-          <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-black to-100%"></div>
-          <img
-            className="w-full h-full object-cover object-center"
-            srcSet={`
+      <div className="relative bg-black/60 backdrop-blur-2xl">
+        <div className="absolute inset-0 bg-black h-screen">
+          <div className="absolute inset-0 bg-gradient-to-b from-30% from-black/40 to-black"></div>
+
+          {!backdrop_path ? (
+            <div className="bg-black h-full flex items-center justify-center">
+              {media_type === "movie" ? <Film /> : <Tv />}
+            </div>
+          ) : (
+            <img
+              className="w-full h-full object-cover object-center"
+              srcSet={`
               ${IMAGE_CONFIG.base_url + "w780" + backdrop_path} 780w,
               ${IMAGE_CONFIG.base_url + "w1280" + backdrop_path} 1280w,
               ${IMAGE_CONFIG.base_url + "original" + backdrop_path} 1440w`}
-            src={IMAGE_CONFIG.base_url + "original" + backdrop_path}
-            loading="lazy"
-          />
+              src={IMAGE_CONFIG.base_url + "original" + backdrop_path}
+              fetchPriority="high"
+              sizes="100vw"
+              alt=""
+            />
+          )}
           <div className="h-[250px] bg-gradient-to-b from-black to-transparent z-10 top-full inset-x-0 absolute"></div>
         </div>
         <div className="relative z-10">
-          <div className="max-w-[90vw] w-full mx-auto min-h-screen flex flex-col justify-end pt-32 pb-12">
-            <div className="flex gap-8 sm:flex-row justify-between items-end flex-col">
-              <div className="flex flex-col gap-4">
+          <div className="max-w-[90vw] w-full mx-auto min-h-screen flex flex-col justify-end pt-32 lg:pt-0 lg:pb-16">
+            <div className="flex gap-8 lg:flex-row justify-between lg:items-end flex-col-reverse">
+              <div className="flex flex-col gap-4 flex-1">
                 <div>
                   <h1 className="text-4xl xl:text-5xl font-extrabold mb-2">
                     {title}
@@ -162,11 +185,11 @@ function DetailShow() {
                     <Plus strokeWidth={3} className="size-6" />
                     watchlist
                   </button>
-                  <button className="p-4 bg-white/40 rounded gap-2 flex items-center">
+                  <button className="p-4 bg-white/40 rounded gap-4 flex items-center font-semibold capitalize">
                     <ThumbsUp />
                     like
                   </button>
-                  <button className="p-4 bg-white/40 rounded gap-2 flex items-center">
+                  <button className="p-4 bg-white/40 rounded gap-4 font-semibold capitalize flex items-center">
                     <ThumbsDown />
                     dislike
                   </button>
@@ -175,69 +198,51 @@ function DetailShow() {
                   </a>
                 </div>
               </div>
-              {(
-                detailData?.videos?.results.filter(
-                  (item) => item.type === "Trailer",
-                ) ?? []
-              ).length > 0 && (
-                <div className="border border-white/40 rounded-xl flex flex-col gap-2 p-2.5 bg-white/20">
-                  <img
-                    className="w-[350px] rounded-lg"
-                    src={`https://img.youtube.com/vi/${
-                      detailData?.videos?.results.filter(
-                        (item) => item.type === "Trailer",
-                      )[0]?.key
-                    }/maxresdefault.jpg`}
-                  />
-                  <a
-                    href={`https://youtu.be/${
-                      detailData?.videos?.results.filter(
-                        (item) => item.type === "Trailer",
-                      )[0]?.key
-                    }`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-semibold capitalize"
-                  >
-                    watch trailer
-                  </a>
-                </div>
-              )}
+              <div className="w-40 lg:w-[15vw] border border-white/20 shadow-xl shadow-white/10 rounded-lg">
+                <img
+                  className="rounded-lg"
+                  src={IMAGE_CONFIG.base_url + "w342" + detailData?.poster_path}
+                />
+              </div>
             </div>
             <div className="mt-8">
-              <div className="rounded-2xl grid grid-cols-2 md:flex items-start gap-4 md:gap-8 p-8 border border-gray-400/30 bg-white/5 backdrop-blur-xl flex-wrap">
-                <Information
-                  title="release date"
-                  content={formatDate(releaseDate ?? "")}
-                />
-                <SideLine />
-                <Information title="original title" content={originalTitle} />
-                <SideLine />
-                <Information title="status" content={status} />
-
-                <Information
-                  title={isMovie ? "runtime" : "total seasons"}
-                  content={
-                    isMovie
-                      ? generateRuntime(detailData?.runtime)
-                      : `${detailData?.number_of_seasons} season${(detailData?.number_of_seasons ?? 0) > 2 ? "s" : ""}`
-                  }
-                />
-                <SideLine />
-                {isMovie && (
+              <div className="flex flex-col justify-start lg:flex-row lg:justify-between gap-8 p-6 lg:p-8 border border-gray-400/30 bg-white/10 backdrop-blur-xl rounded-2xl flex-wrap">
+                <div className="grid lg:grid-cols-4 lg:flex items-start lg:items-end gap-4 md:gap-16 md:gap-y-8 grid-cols-2 md:grid-cols-3 w-full ">
                   <Information
-                    title="budget"
-                    content={formatCurrency(detailData.budget)}
+                    title="release date"
+                    content={formatDate(releaseDate ?? "")}
                   />
-                )}
-                <SideLine />
+                  <Information title="original title" content={originalTitle} />
+                  <Information title="status" content={status} />
 
-                {isMovie && (
                   <Information
-                    title="revenue"
-                    content={formatCurrency(detailData.revenue)}
+                    title={isMovie ? "runtime" : "total seasons"}
+                    content={
+                      isMovie
+                        ? generateRuntime(detailData?.runtime)
+                        : `${detailData?.number_of_seasons} season${(detailData?.number_of_seasons ?? 0) > 2 ? "s" : ""}`
+                    }
                   />
-                )}
+                  {isTv && (
+                    <Information
+                      title="total episodes"
+                      content={detailData.number_of_episodes + " episodes"}
+                    />
+                  )}
+                  {isMovie && (
+                    <Information
+                      title="budget"
+                      content={formatCurrency(detailData.budget)}
+                    />
+                  )}
+
+                  {isMovie && (
+                    <Information
+                      title="revenue"
+                      content={formatCurrency(detailData.revenue)}
+                    />
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -245,40 +250,89 @@ function DetailShow() {
         <div className="max-w-[90vw] w-full mx-auto py-8 relative z-10">
           <div className="mt-8">
             <h2 className="font-bold text-2xl mb-4">Video</h2>
-            <ul className="grid grid-cols-3 gap-4">
+            <ul className="flex items-center flex-wrap gap-6">
               {mediaList.reverse().map((item) => (
                 <li
                   key={item.id}
-                  className="min-w-[300px] flex flex-col gap-2 relative max-w-[300px] w-full rounded-lg"
+                  className="flex flex-col gap-2 relative rounded-lg border border-white/20 w-[400px] h-[250px]"
                 >
-                  <span className="absolute top-4 right-4 bg-white/80 border-2 font-semibold border-black p-1 px-4 text-black rounded">
+                  <span className="absolute top-4 right-4 bg-blue-500/40 font-medium tracking-wide capitalize px-3 rounded-full p-1 text-white text-xs">
                     {item.type}
                   </span>
                   <img
-                    className="rounded-lg"
+                    className="rounded-lg w-full h-full object-cover"
                     src={`https://img.youtube.com/vi/${item.key}/hqdefault.jpg`}
                   />
                 </li>
               ))}
             </ul>
           </div>
-          <section className="border border-white/20 rounded-xl mt-8">
+          <section className="border border-white/20 rounded-xl mt-24">
             <h2 className="font-bold text-2xl p-8">Cast & Crew</h2>
-            <div>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 p-8 border-white/20 border-t">
-                {creditData?.cast.slice(0, 10).map((item) => (
-                  <Credit key={item.credit_id} data={item} />
-                ))}
-              </ul>
-              <ul className="grid grid-cols-1 md:grid-cols-2 gap-4 p-8 border-white/20 border-t">
-                {crewFilter.slice(0, 10).map((item) => (
-                  <Credit key={item.credit_id} data={item} />
+            <div className="grid grid-cols-1 lg:grid-cols-[55%_45%] border-t items-start border-white/20 ">
+              <div className="p-8 lg:border-r border-b lg:border-b-0 border-white/20 h-full">
+                <h3 className="font-semibold text-lg mb-4">Starring</h3>
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {creditData?.cast.slice(0, 10).map((item) => (
+                    <Credit key={item.credit_id} data={item} />
+                  ))}
+                </ul>
+              </div>
+              <div className="p-8 h-full">
+                <h3 className="font-semibold text-lg mb-4">Crew</h3>
+
+                <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {crewFilter.slice(0, 10).map((item) => (
+                    <Credit key={item.credit_id} data={item} />
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </section>
+          {isMovie && collection && (
+            <div
+              style={{
+                backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,.3), black), url(${IMAGE_CONFIG.base_url + "original" + collection?.backdrop_path})`,
+              }}
+              className="bg-cover p-8 rounded-lg mt-12 border border-white/20 flex flex-col gap-8"
+            >
+              <img
+                className="w-[250px]"
+                src={
+                  IMAGE_CONFIG.base_url + "original" + collection?.poster_path
+                }
+              />
+              <ul className="horizontal-container  flex items-start gap-8 overflow-x-auto">
+                {collectionData?.parts.map((item) => (
+                  <li key={item.id} className="min-w-[200px] max-w-[200px]">
+                    <img
+                      src={
+                        IMAGE_CONFIG.base_url + "original" + item.poster_path
+                      }
+                    />
+                    {item.title}
+                  </li>
                 ))}
               </ul>
             </div>
-          </section>
-          <section className="mt-8">
-            <h2 className="font-bold text-2xl mb-4">You may also like :</h2>
+          )}
+          {isTv && detailData.seasons.length > 0 && (
+            <div className="mt-12 p-8 border border-white/20 rounded-lg bg-black/40">
+              <h2 className="font-bold text-xl mb-6">Season List</h2>
+              <ul className="horizontal-container flex gap-6 overflow-x-auto">
+                {detailData.seasons.map((item) => (
+                  <li className="min-w-[250px] max-w-[250px]" key={item.id}>
+                    <img
+                      src={IMAGE_CONFIG.base_url + "w342" + item.poster_path}
+                    />
+                    {item.name}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <section className="mt-28">
+            <h2 className="font-bold text-2xl mb-8">You may also like :</h2>
             <ul className="horizontal-container flex items-start gap-4 overflow-x-auto">
               {recommendationData?.results.map((item) => (
                 <li
@@ -290,6 +344,7 @@ function DetailShow() {
                     className="w-full h-full object-cover rounded-lg border border-white/20"
                   />
                   <Link
+                    title={"title" in item ? item.title : item.name}
                     className="group-hover:text-yellow-500 transition-all duration-300"
                     to={`/discover/${item.media_type}/detail/${item.id}`}
                   >
@@ -301,17 +356,6 @@ function DetailShow() {
               ))}
             </ul>
           </section>
-          <div className="flex items-center gap-4 bg-white/40 flex-wrap justify-center">
-            {detailData?.production_companies
-              .filter((item) => item.logo_path !== null)
-              .map((item) => (
-                <img
-                  className="max-h-[80px] max-w-[300px] h-full object-cover"
-                  key={item.id}
-                  src={IMAGE_CONFIG.base_url + "original" + item.logo_path}
-                />
-              ))}
-          </div>
         </div>
       </div>
     </div>
@@ -327,16 +371,12 @@ const Information = ({
 }) => {
   return (
     <div className="flex flex-col gap-2">
-      <span className="font-medium uppercase text-neutral-400 text-xs tracking-widest">
+      <span className="font-medium uppercase line-clamp-1 text-neutral-400 text-xs tracking-widest">
         {title}
       </span>
-      <p className="font-bold">{content}</p>
+      <p className="font-bold capitalize">{content}</p>
     </div>
   );
-};
-
-const SideLine = () => {
-  return <div className="hidden w-0.5 bg-white/10 md:flex h-8"></div>;
 };
 
 export default DetailShow;

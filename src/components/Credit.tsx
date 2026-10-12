@@ -10,7 +10,7 @@ function Credit({ data: item }: CreditProps) {
   const isCast = "character" in item;
   return (
     <li key={item.id} className="flex items-center gap-4">
-      <div className="w-16 bg-white/10 aspect-square rounded-lg flex border border-white/20">
+      <div className="min-w-16 w-16 max-w-16 bg-white/10 aspect-square rounded-lg flex border border-white/20">
         {!item.profile_path ? (
           <div className="flex-1 flex items-center justify-center">
             <UserRound />
@@ -23,7 +23,7 @@ function Credit({ data: item }: CreditProps) {
         )}
       </div>
       <div>
-        <h3 className="font-semibold">{item.name}</h3>
+        <h3 title={item.name} className="font-semibold line-clamp-1">{item.name}</h3>
         <p className="text-sm text-neutral-400">
           {isCast ? item.character : item.job}
         </p>

@@ -11,14 +11,13 @@ interface HorizontalCardProps {
 }
 
 function HorizontalCard({ data: item, uniqueGenre }: HorizontalCardProps) {
-  const title = item.media_type === "movie" ? item.title : item.name;
-  const releaseDate =
-    item.media_type === "movie" ? item.release_date : item.first_air_date;
+  const title = 'title' in item ? item.title : item.name;
+  const releaseDate = "title" in item ? item.release_date : item.first_air_date;
   const IMAGE_URL = IMAGE_CONFIG.base_url + "w300" + item.backdrop_path;
   return (
     <li key={item.id} className="min-w-[60%] xl:min-w-[20%] group">
       <Link
-        to={`/discover/${item.media_type}/detail/${item.id}`}
+        to={`/discover/${"title" in item ? "movie" : "tv"}/detail/${item.id}`}
         className="flex flex-col gap-2"
       >
         <div className="relative overflow-hidden border min-h-[120px] border-white/20 rounded-xl">

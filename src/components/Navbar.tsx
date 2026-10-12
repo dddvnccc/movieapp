@@ -1,17 +1,26 @@
 import { useState } from "react";
 import { NavLink } from "react-router";
-import { Home, Film, Tv, User, Search, type LucideIcon } from "lucide-react";
+import {
+  Home,
+  Film,
+  Tv,
+  User,
+  Search,
+  type LucideIcon,
+  UserRound,
+} from "lucide-react";
 import Portal from "./Portal";
 import SearchModal from "./SearchModal";
 
 const NAVLINKS = [
   { id: 1, name: "home", icon: Home, href: "/" },
-  { id: 2, name: "movies", icon: Film, href: "/movies" },
-  { id: 3, name: "TV series", icon: Tv, href: "/tv" },
+  { id: 2, name: "movies", icon: Film, href: "/discover/movie" },
+  { id: 3, name: "TV series", icon: Tv, href: "/discover/tv" },
 ];
 
 function Navbar() {
   const [isModalActive, setIsModalActive] = useState(false);
+  const [isMenuActive, setIsMenuActive] = useState(false);
   return (
     <>
       <Portal>
@@ -20,10 +29,12 @@ function Navbar() {
           isActive={isModalActive}
         />
       </Portal>
-      <header className="fixed z-50 max-w-screen-md w-full top-4 inset-x-0 bottom-auto mx-auto bg-black/80 border border-white/20 rounded-full p-3 px-8">
+      <header className="fixed z-50 max-w-screen-md w-auto inset-x-0 top-4 bottom-auto mx-4 sm:mx-auto bg-black/80 border border-white/20 rounded-full p-3 px-8">
         <nav className="flex items-center gap-6">
-          <span>temuflix</span>
-          <ul className="flex items-center gap-2 flex-1">
+          <span className="font-bold flex-1 md:flex-none">
+            <span className="uppercase">temu</span>flix
+          </span>
+          <ul className="hidden md:flex items-center gap-2 flex-1">
             {NAVLINKS.map((item) => {
               const Icon = item.icon;
               return (
@@ -45,7 +56,31 @@ function Navbar() {
             handleClick={() => setIsModalActive(true)}
             icon={Search}
           />
-          <NavbarButton handleClick={() => ""} icon={User} />
+          <div className="relative">
+            <NavbarButton
+              handleClick={() => setIsMenuActive(!isMenuActive)}
+              icon={User}
+            />
+            <div
+              style={{
+                opacity: isMenuActive ? "1" : "0",
+                pointerEvents: isMenuActive ? "auto" : "none",
+                visibility: isMenuActive ? "visible" : "hidden",
+              }}
+              className="absolute mt-8 bg-black right-0 transition-all duration-300 rounded-lg min-w-[300px] border border-white/20"
+            >
+              <div className="p-6 flex items-center gap-4 border-b border-white/20">
+                <div className="p-2 border rounded border-white/20">
+                  <UserRound className="size-6" />
+                </div>
+                <div>
+                  <h3>Guest</h3>
+                  <p className="text-xs">sign in to sync your data</p>
+                </div>
+              </div>
+              <button onClick={() => console.log("hi")}>signin</button>
+            </div>
+          </div>
         </nav>
       </header>
     </>

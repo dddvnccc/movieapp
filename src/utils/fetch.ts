@@ -1,7 +1,6 @@
 import axios from "axios";
 const AUTH_KEY = import.meta.env.VITE_TMDB_AUTH_KEY;
 import type {
-  MediaType,
   TrendingResponse,
   Genre,
   SearchResponse,
@@ -9,6 +8,8 @@ import type {
   DetailTv,
   ShowType,
   ShowCredit,
+  DetailCollection,
+  TrendingMovie,
 } from "../types/fetch";
 
 const headers = {
@@ -121,10 +122,14 @@ export async function getShowCredit(
   }
 }
 
-export async function getRecommendation(show_type: ShowType, show_id: number):Promise<TrendingResponse> {
+export async function getExtra(
+  category: "similar" | "recommendations",
+  show_type: ShowType,
+  show_id: number,
+): Promise<TrendingResponse> {
   const options = {
     method: "GET",
-    url: `https://api.themoviedb.org/3/${show_type}/${show_id}/recommendations`,
+    url: `https://api.themoviedb.org/3/${show_type}/${show_id}/${category}`,
     params: { language: "en-US", page: "1" },
     headers,
   };
@@ -135,6 +140,47 @@ export async function getRecommendation(show_type: ShowType, show_id: number):Pr
     return data;
   } catch (error) {
     console.error(error);
-    throw error
+    throw error;
+  }
+}
+
+export async function getCollectionDetail(
+  collection_id: number,
+): Promise<DetailCollection> {
+  const options = {
+    method: "GET",
+    url: `https://api.themoviedb.org/3/collection/${collection_id}`,
+    params: { language: "en-US" },
+    headers,
+  };
+
+  try {
+    const { data } = await axios.request<DetailCollection>(options);
+    console.log(data);
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
+export async function getShowList(
+  show_type: ShowType,
+  category: string,
+): Promise<TrendingResponse> {
+  const options = {
+    method: "GET",
+    url: `https://api.themoviedb.org/3/${show_type}/${show_type === "tv" && category === "now_playing" ? "airing_today" : show_type === 'tv' && category === 'upcoming' ? 'on_the_air' : category}`,
+    params: { language: "en-US", page: "1", region: "us" },
+    headers,
+  };
+
+  try {
+    const { data } = await axios.request<TrendingResponse>(options);
+    console.log(data);
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
   }
 }
