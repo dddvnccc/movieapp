@@ -20,8 +20,7 @@ export const Layout = () => {
   );
 
   return (
-    <div
-    >
+    <div>
       <Navbar />
       <main>
         <Outlet context={{ uniqueGenre }} />

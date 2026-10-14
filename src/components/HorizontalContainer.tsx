@@ -66,7 +66,7 @@ function HorizontalContainer({ children }: HorizontalContainerProps) {
         ref={containerRef}
         onScroll={handleScroll}
         onClick={() => console.log(containerRef.current?.scrollLeft)}
-        className="flex items-center overflow-x-auto gap-6 horizontal-container"
+        className="flex items-center overflow-x-auto gap-6 hide-scrollbar"
       >
         {children}
       </ul>

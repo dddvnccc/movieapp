@@ -86,9 +86,9 @@ function SearchModal({ isActive, handleClose }: SearchModalProps) {
                   className="first:mt-4 last:mb-6 hover:bg-white/20 border border-transparent hover:border-white/40 rounded-lg mr-4 p-2"
                 >
                   <Link
-                  onClick={handleClose}
+                    onClick={handleClose}
                     className="flex items-center gap-4"
-                    to={`/discover/${item.media_type}/detail/${item.id}`}
+                    to={`/${item.media_type}/detail/${item.id}`}
                   >
                     {!item.poster_path ? (
                       <div className="bg-white/20 w-12 h-14 rounded text-white/40 flex items-center justify-center">
@@ -113,7 +113,8 @@ function SearchModal({ isActive, handleClose }: SearchModalProps) {
                           {item.media_type === "tv"
                             ? "tv series"
                             : item.media_type}
-                        </span>|
+                        </span>
+                        |
                         <span>
                           {(item.media_type === "tv"
                             ? item.first_air_date

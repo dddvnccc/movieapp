@@ -23,7 +23,9 @@ function Credit({ data: item }: CreditProps) {
         )}
       </div>
       <div>
-        <h3 title={item.name} className="font-semibold line-clamp-1">{item.name}</h3>
+        <h3 title={item.name} className="font-semibold line-clamp-1">
+          {item.name}
+        </h3>
         <p className="text-sm text-neutral-400">
           {isCast ? item.character : item.job}
         </p>

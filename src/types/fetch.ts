@@ -132,6 +132,7 @@ export interface DetailMovie extends DetailShow {
   runtime: number;
   title: string;
   video: boolean;
+  release_dates?: ReleaseDates;
 }
 
 export interface DetailTv extends DetailShow {
@@ -150,6 +151,7 @@ export interface DetailTv extends DetailShow {
   original_name: string;
   seasons: Season[];
   type: string;
+  content_ratings?: ContentRatings;
 }
 
 export interface Season {
@@ -310,4 +312,39 @@ export interface Part {
   video: boolean;
   vote_average: number;
   vote_count: number;
+}
+
+export interface ReleaseDates {
+  id?: number;
+  results: ReleaseDatesResult[] | null;
+}
+
+export interface ReleaseDatesResult {
+  iso_3166_1: string;
+  release_dates: ReleaseDate[];
+}
+
+export interface ReleaseDate {
+  certification: string;
+  descriptors: string[];
+  iso_639_1: string;
+  note: string;
+  release_date: string;
+  type: number;
+}
+
+export interface ContentRatings {
+  results: ContentRatingsResult[] | null;
+  id?: number;
+}
+export interface ContentRatingsResult {
+  descriptors: [];
+  iso_3166_1: string;
+  rating: string;
+}
+
+export interface Country {
+  iso_3166_1: string;
+  english_name: string;
+  native_name: string;
 }

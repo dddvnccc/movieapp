@@ -9,7 +9,7 @@ import type {
   ShowType,
   ShowCredit,
   DetailCollection,
-  TrendingMovie,
+  Country,
 } from "../types/fetch";
 
 const headers = {
@@ -86,7 +86,7 @@ export async function getDetailShow(
 ): Promise<DetailMovie | DetailTv> {
   const options = {
     method: "GET",
-    url: `https://api.themoviedb.org/3/${media_type}/${show_id}?append_to_response=videos`,
+    url: `https://api.themoviedb.org/3/${media_type}/${show_id}?append_to_response=videos,${media_type === "movie" ? "release_dates" : "content_ratings"}`,
     params: { language: "en-US" },
     headers,
   };
@@ -167,16 +167,90 @@ export async function getCollectionDetail(
 export async function getShowList(
   show_type: ShowType,
   category: string,
+  page: number | string,
 ): Promise<TrendingResponse> {
   const options = {
     method: "GET",
-    url: `https://api.themoviedb.org/3/${show_type}/${show_type === "tv" && category === "now_playing" ? "airing_today" : show_type === 'tv' && category === 'upcoming' ? 'on_the_air' : category}`,
-    params: { language: "en-US", page: "1", region: "us" },
+    url: `https://api.themoviedb.org/3/${show_type}/${show_type === "tv" && category === "now_playing" ? "airing_today" : show_type === "tv" && category === "upcoming" ? "on_the_air" : category}`,
+    params: { language: "en-US", page, region: "us" },
     headers,
   };
 
   try {
     const { data } = await axios.request<TrendingResponse>(options);
+    console.log(data);
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
+export async function getAllShow(
+  show_type: ShowType,
+  page: number | string,
+  genre?: string | number,
+  country?: string,
+  year?: string | number,
+): Promise<TrendingResponse> {
+  let voteCount;
+  if (show_type === "movie") {
+    if (genre || country || year) {
+      voteCount = "2";
+    } else {
+      voteCount = "10";
+    }
+  } else if (show_type === "tv") {
+    if (genre || country || year) {
+      voteCount = "1";
+    } else {
+      voteCount = "5";
+    }
+  }
+  const options = {
+    method: "GET",
+    url: `https://api.themoviedb.org/3/discover/${show_type}`,
+    params: {
+      include_adult: "false",
+      include_video: "false",
+      language: "en-US",
+      page,
+      [show_type === 'movie' ? 'year' : 'first_air_date_year'] : year,
+      ...(country && { with_origin_country: country }),
+      ...(genre && { with_genres: genre }),
+      [show_type === "movie"
+        ? "primary_release_date.lte"
+        : "first_air_date.lte"]: new Date().toISOString().split("T")[0],
+      sort_by:
+        show_type === "movie"
+          ? "primary_release_date.desc"
+          : "first_air_date.desc",
+      "vote_average.gte": "1",
+      "vote_count.gte": voteCount,
+    },
+    headers,
+  };
+
+  try {
+    const { data } = await axios.request<TrendingResponse>(options);
+    console.log(data);
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
+export async function getAllCountry(): Promise<Country[]> {
+  const options = {
+    method: "GET",
+    url: "https://api.themoviedb.org/3/configuration/countries",
+    params: { language: "en-US" },
+    headers,
+  };
+
+  try {
+    const { data } = await axios.request<Country[]>(options);
     console.log(data);
     return data;
   } catch (error) {

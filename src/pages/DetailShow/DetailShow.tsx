@@ -91,6 +91,41 @@ function DetailShow() {
     new Map(creditData?.crew.map((item) => [item.job, item])).values(),
   );
 
+  const movieCertification = () => {
+    if (!isMovie || !detailData.release_dates) return;
+    const filterEmpty = isMovie
+      ? detailData?.release_dates?.results
+          ?.map((item) => ({
+            ...item,
+            release_dates: item.release_dates.filter(
+              (item2) => item2.certification !== "",
+            ),
+          }))
+          .filter((item) => item.release_dates.length > 0)
+      : [];
+
+    return (
+      filterEmpty?.find(
+        (item) =>
+          item.iso_3166_1 === "US" ||
+          item.iso_3166_1 === "GB" ||
+          item.iso_3166_1 === detailData?.origin_country[0],
+      ) ?? filterEmpty?.[0]
+    );
+  };
+
+  const tvCertification = () => {
+    if (!isTv || !detailData.content_ratings) return;
+    return (
+      detailData?.content_ratings?.results?.find(
+        (item) =>
+          item.iso_3166_1 === "US" ||
+          item.iso_3166_1 === "GB" ||
+          item.iso_3166_1 === detailData?.origin_country[0],
+      ) ?? detailData?.content_ratings?.results?.[0]
+    );
+  };
+
   if (detailFetching) {
     return <div className="h-screen bg-black"></div>;
   }
@@ -157,6 +192,12 @@ function DetailShow() {
                       </span>
                     ))}
                   </div>
+                  <span className="px-4 p-2 bg-white/20 rounded border border-white/40">
+                    {isMovie
+                      ? (movieCertification()?.release_dates[0].certification ??
+                        "No Rating")
+                      : (tvCertification()?.rating ?? "No Rating")}
+                  </span>
                 </div>
                 <p className="text-sm md:text-base md:max-w-[40vw] line-clamp-2 font-medium leading-relaxed text-neutral-400">
                   {overview}
@@ -181,7 +222,10 @@ function DetailShow() {
                   </div>
                 )}
                 <div className="flex items-center gap-4 flex-wrap">
-                  <button className="flex items-center gap-2 text-lg p-4 px-6 rounded bg-yellow-500/40 border border-yellow-500/60 font-bold capitalize">
+                  <button
+                    onClick={() => console.log(movieCertification())}
+                    className="flex items-center gap-2 text-lg p-4 px-6 rounded bg-yellow-500/40 border border-yellow-500/60 font-bold capitalize"
+                  >
                     <Plus strokeWidth={3} className="size-6" />
                     watchlist
                   </button>
@@ -198,15 +242,15 @@ function DetailShow() {
                   </a>
                 </div>
               </div>
-              <div className="w-40 lg:w-[15vw] border border-white/20 shadow-xl shadow-white/10 rounded-lg">
+              <div className="min-w-[250px] w-fit lg:w-[15vw] border border-white/20 shadow-xl shadow-white/10 rounded-lg">
                 <img
-                  className="rounded-lg"
+                  className="rounded-lg w-full"
                   src={IMAGE_CONFIG.base_url + "w342" + detailData?.poster_path}
                 />
               </div>
             </div>
             <div className="mt-8">
-              <div className="flex flex-col justify-start lg:flex-row lg:justify-between gap-8 p-6 lg:p-8 border border-gray-400/30 bg-white/10 backdrop-blur-xl rounded-2xl flex-wrap">
+              <div className="flex flex-col justify-start lg:flex-row lg:justify-between gap-4 p-6 lg:p-6 border border-gray-400/30 bg-white/10 backdrop-blur-xl rounded-lg flex-wrap">
                 <div className="grid lg:grid-cols-4 lg:flex items-start lg:items-end gap-4 md:gap-16 md:gap-y-8 grid-cols-2 md:grid-cols-3 w-full ">
                   <Information
                     title="release date"
@@ -302,24 +346,30 @@ function DetailShow() {
                   IMAGE_CONFIG.base_url + "original" + collection?.poster_path
                 }
               />
-              <ul className="horizontal-container  flex items-start gap-8 overflow-x-auto">
-                {collectionData?.parts.map((item) => (
-                  <li key={item.id} className="min-w-[200px] max-w-[200px]">
-                    <img
-                      src={
-                        IMAGE_CONFIG.base_url + "original" + item.poster_path
-                      }
-                    />
-                    {item.title}
-                  </li>
-                ))}
+              <ul className="hide-scrollbar flex items-start gap-8 overflow-x-auto">
+                {collectionData?.parts
+                  .sort(
+                    (item1, item2) =>
+                      Number(new Date(item2.release_date)) -
+                      Number(new Date(item1.release_date)),
+                  )
+                  .map((item) => (
+                    <li key={item.id} className="min-w-[200px] max-w-[200px]">
+                      <img
+                        src={
+                          IMAGE_CONFIG.base_url + "original" + item.poster_path
+                        }
+                      />
+                      {item.title}
+                    </li>
+                  ))}
               </ul>
             </div>
           )}
           {isTv && detailData.seasons.length > 0 && (
             <div className="mt-12 p-8 border border-white/20 rounded-lg bg-black/40">
               <h2 className="font-bold text-xl mb-6">Season List</h2>
-              <ul className="horizontal-container flex gap-6 overflow-x-auto">
+              <ul className="hide-scrollbar flex gap-6 overflow-x-auto">
                 {detailData.seasons.map((item) => (
                   <li className="min-w-[250px] max-w-[250px]" key={item.id}>
                     <img
@@ -333,7 +383,7 @@ function DetailShow() {
           )}
           <section className="mt-28">
             <h2 className="font-bold text-2xl mb-8">You may also like :</h2>
-            <ul className="horizontal-container flex items-start gap-4 overflow-x-auto">
+            <ul className="hide-scrollbar flex items-start gap-4 overflow-x-auto">
               {recommendationData?.results.map((item) => (
                 <li
                   key={item.id}
@@ -346,7 +396,7 @@ function DetailShow() {
                   <Link
                     title={"title" in item ? item.title : item.name}
                     className="group-hover:text-yellow-500 transition-all duration-300"
-                    to={`/discover/${item.media_type}/detail/${item.id}`}
+                    to={`/${item.media_type}/detail/${item.id}`}
                   >
                     <p className="truncate font-semibold text-lg">
                       {"title" in item ? item.title : item.name}

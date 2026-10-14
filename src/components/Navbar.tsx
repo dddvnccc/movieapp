@@ -14,8 +14,8 @@ import SearchModal from "./SearchModal";
 
 const NAVLINKS = [
   { id: 1, name: "home", icon: Home, href: "/" },
-  { id: 2, name: "movies", icon: Film, href: "/discover/movie" },
-  { id: 3, name: "TV series", icon: Tv, href: "/discover/tv" },
+  { id: 2, name: "movies", icon: Film, href: "/movie" },
+  { id: 3, name: "TV series", icon: Tv, href: "/tv" },
 ];
 
 function Navbar() {

@@ -18,7 +18,6 @@
 html,
 body {
   overscroll-behavior-y: none;
-  scrollbar-gutter: stable;
 }
 
 body {
@@ -37,11 +36,11 @@ body {
   background: rgba(255, 255, 255, 0.5);
 }
 
-.horizontal-container {
+.hide-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-.horizontal-container::-webkit-scrollbar {
+.hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
