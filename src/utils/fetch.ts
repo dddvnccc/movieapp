@@ -215,7 +215,7 @@ export async function getAllShow(
       include_video: "false",
       language: "en-US",
       page,
-      [show_type === 'movie' ? 'year' : 'first_air_date_year'] : year,
+      [show_type === "movie" ? "year" : "first_air_date_year"]: year,
       ...(country && { with_origin_country: country }),
       ...(genre && { with_genres: genre }),
       [show_type === "movie"

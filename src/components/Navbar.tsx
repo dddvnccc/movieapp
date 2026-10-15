@@ -1,16 +1,18 @@
-import { useState } from "react";
-import { NavLink } from "react-router";
+import { useState, useRef, useEffect } from "react";
+import { Link, NavLink } from "react-router";
 import {
   Home,
   Film,
   Tv,
   User,
   Search,
+  LogIn,
   type LucideIcon,
   UserRound,
 } from "lucide-react";
 import Portal from "./Portal";
 import SearchModal from "./SearchModal";
+import AuthModal from "./AuthModal";
 
 const NAVLINKS = [
   { id: 1, name: "home", icon: Home, href: "/" },
@@ -19,14 +21,34 @@ const NAVLINKS = [
 ];
 
 function Navbar() {
+  const menuRef = useRef<HTMLDivElement>(null);
   const [isModalActive, setIsModalActive] = useState(false);
   const [isMenuActive, setIsMenuActive] = useState(false);
+  const [isLoginActive, setIsLoginActive] = useState(false);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (
+        isMenuActive &&
+        menuRef.current &&
+        !menuRef.current.contains(e.target as Node)
+      ) {
+        setIsMenuActive(false);
+      }
+    };
+    window.addEventListener("click", handleOutsideClick);
+  }, [isMenuActive]);
+
   return (
     <>
       <Portal>
         <SearchModal
           handleClose={() => setIsModalActive(false)}
           isActive={isModalActive}
+        />
+        <AuthModal
+          isActive={isLoginActive}
+          handleClose={() => setIsLoginActive(false)}
         />
       </Portal>
       <header className="fixed z-50 max-w-screen-md w-auto inset-x-0 top-4 bottom-auto mx-4 sm:mx-auto bg-black/80 border border-white/20 rounded-full p-3 px-8">
@@ -56,7 +78,7 @@ function Navbar() {
             handleClick={() => setIsModalActive(true)}
             icon={Search}
           />
-          <div className="relative">
+          <div ref={menuRef} className="relative">
             <NavbarButton
               handleClick={() => setIsMenuActive(!isMenuActive)}
               icon={User}
@@ -67,18 +89,28 @@ function Navbar() {
                 pointerEvents: isMenuActive ? "auto" : "none",
                 visibility: isMenuActive ? "visible" : "hidden",
               }}
-              className="absolute mt-8 bg-black right-0 transition-all duration-300 rounded-lg min-w-[300px] border border-white/20"
+              className="absolute mt-8 bg-black -right-4 transition-all duration-300 rounded-lg min-w-[350px] border border-white/20"
             >
               <div className="p-6 flex items-center gap-4 border-b border-white/20">
-                <div className="p-2 border rounded border-white/20">
-                  <UserRound className="size-6" />
+                <div className="size-12 p-2 border rounded border-white/20 flex items-center justify-center">
+                  <UserRound className="" />
                 </div>
-                <div>
-                  <h3>Guest</h3>
-                  <p className="text-xs">sign in to sync your data</p>
+                <div className="flex flex-col ">
+                  <h3 className="font-semibold">Guest</h3>
+                  <p className="text-sm font-light">
+                    sign in to sync your data
+                  </p>
                 </div>
               </div>
-              <button onClick={() => console.log("hi")}>signin</button>
+              <div className="p-2">
+                <button
+                  className="p-3 px-4 w-full hover:bg-white/10 rounded flex items-center gap-4 capitalize"
+                  onClick={() => setIsLoginActive(true)}
+                >
+                  <LogIn className="size-5" />
+                  <span className="font-bold">sign In</span>
+                </button>
+              </div>
             </div>
           </div>
         </nav>

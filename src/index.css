@@ -45,7 +45,7 @@ body {
 }
 
 .showBg {
-  animation: showBg 3s ease-in forwards;
+  animation: showBg 15s ease-in forwards;
 }
 
 .showDescription {
@@ -68,7 +68,7 @@ body {
     opacity: 0;
     scale: 1.1;
   }
-  30% {
+  10% {
     opacity: 1;
   }
   100% {

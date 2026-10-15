@@ -16,7 +16,7 @@ import type {
 import { IMAGE_CONFIG } from "../../utils/config";
 import { getGenreList, ratingBackground } from "../../utils/utils";
 import Rating from "../../components/Rating";
-import { Info } from "lucide-react";
+import { Dot, Info } from "lucide-react";
 import Pagination from "../../components/Pagination";
 import Portal from "../../components/Portal";
 import FilterModal from "../../components/FilterModal";
@@ -134,7 +134,7 @@ function ShowList() {
       </Portal>
       <div className="bg-black inset-0 fixed -z-10"></div>
       <div className="absolute inset-0 overflow-hidden h-screen">
-        <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/40 from-20% to-black"></div>
+        <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/10 from-20% to-black"></div>
         <img
           key={currentIndex || media_type}
           fetchPriority="high"
@@ -219,16 +219,19 @@ function ShowList() {
                       className="flex flex-col gap-2 rounded-lg"
                     >
                       <div className="relative">
-                        <div className="absolute inset-0 p-4 bg-black/20">
-                          <Rating
-                            size={14}
-                            rating={item.vote_average}
-                            background={ratingBackground(item.vote_average)}
-                          />
+                        <div className="absolute inset-0 justify-end items-end flex bg-black/20">
+                          <span
+                            style={{
+                              background: "black",
+                            }}
+                            className="p-1.5 px-2 rounded rounded-bl-none rounded-tr-none font-bold"
+                          >
+                            {item.vote_average.toFixed(1)}
+                          </span>
                         </div>
 
                         <img
-                          className="w-full aspect-video object-cover rounded-lg border border-white/20"
+                          className="w-full aspect-video object-cover rounded border border-white/20"
                           src={
                             IMAGE_CONFIG.base_url + "w300" + item.backdrop_path
                           }
@@ -236,11 +239,27 @@ function ShowList() {
                         />
                       </div>
 
-                      <Link to={`detail/${item.id}`}>
-                        <h3 className="line-clamp-1">
-                          {"title" in item ? item.title : item.name}
-                        </h3>
-                      </Link>
+                      <div className="flex flex-col gap-0">
+                        <Link to={`detail/${item.id}`}>
+                          <h3 className="line-clamp-1 text-lg font-bold">
+                            {"title" in item ? item.title : item.name}
+                          </h3>
+                        </Link>
+                        <div className="text-sm flex items-center gap-0 text-neutral-500 font-medium">
+                          <span>
+                            {
+                              ("title" in item
+                                ? item.release_date
+                                : item.first_air_date
+                              ).split("-")[0]
+                            }
+                          </span>
+                          <Dot />
+                          <span>
+                            {getGenreList(item.genre_ids, uniqueGenre)[0]?.name}
+                          </span>
+                        </div>
+                      </div>
                     </li>
                   ),
                 )}
