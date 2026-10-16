@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Link, NavLink } from "react-router";
+import { useState, useRef, useEffect, useContext } from "react";
+import { Link, NavLink, useNavigate } from "react-router";
 import {
   Home,
   Film,
@@ -13,6 +13,8 @@ import {
 import Portal from "./Portal";
 import SearchModal from "./SearchModal";
 import AuthModal from "./AuthModal";
+import { AuthContexts } from "../Context/AuthContext";
+import { supabase } from "../utils/supabase";
 
 const NAVLINKS = [
   { id: 1, name: "home", icon: Home, href: "/" },
@@ -21,10 +23,27 @@ const NAVLINKS = [
 ];
 
 function Navbar() {
+  const navigate = useNavigate();
+  const { claims, clearClaims } = useContext(AuthContexts);
   const menuRef = useRef<HTMLDivElement>(null);
   const [isModalActive, setIsModalActive] = useState(false);
   const [isMenuActive, setIsMenuActive] = useState(false);
   const [isLoginActive, setIsLoginActive] = useState(false);
+
+  const handleLogin = async () => {
+    if (!claims) {
+      return setIsLoginActive(true);
+    }
+
+    try {
+      supabase.auth.signOut();
+
+      clearClaims();
+      navigate("/");
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -96,7 +115,9 @@ function Navbar() {
                   <UserRound className="" />
                 </div>
                 <div className="flex flex-col ">
-                  <h3 className="font-semibold">Guest</h3>
+                  <h3 className="font-semibold">
+                    {claims ? claims.email : "Guest"}
+                  </h3>
                   <p className="text-sm font-light">
                     sign in to sync your data
                   </p>
@@ -105,10 +126,12 @@ function Navbar() {
               <div className="p-2">
                 <button
                   className="p-3 px-4 w-full hover:bg-white/10 rounded flex items-center gap-4 capitalize"
-                  onClick={() => setIsLoginActive(true)}
+                  onClick={handleLogin}
                 >
                   <LogIn className="size-5" />
-                  <span className="font-bold">sign In</span>
+                  <span className="font-bold">
+                    {claims ? "signout" : "sign In"}
+                  </span>
                 </button>
               </div>
             </div>

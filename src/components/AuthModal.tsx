@@ -2,11 +2,12 @@ import { X } from "lucide-react";
 import React, {
   useEffect,
   useState,
+  useContext,
   type ChangeEvent,
-  type InputHTMLAttributes,
   type SubmitEvent,
 } from "react";
 import { supabase } from "../utils/supabase";
+import { AuthContexts } from "../Context/AuthContext";
 
 interface AuthModalProps {
   isActive: boolean;
@@ -16,6 +17,7 @@ interface AuthModalProps {
 type AuthForm = "name" | "email" | "password";
 
 function AuthModal({ isActive, handleClose }: AuthModalProps) {
+  const { claims } = useContext(AuthContexts);
   const [isLogin, setIsLogin] = useState(true);
   const [authForm, setAuthForm] = useState({
     name: "",
@@ -57,6 +59,7 @@ function AuthModal({ isActive, handleClose }: AuthModalProps) {
         if (error) {
           console.log(error);
         }
+
         return data;
       } catch (error) {
         console.error(error);
@@ -65,6 +68,9 @@ function AuthModal({ isActive, handleClose }: AuthModalProps) {
       }
     }
   };
+  useEffect(() => {
+    console.log(claims);
+  }, [claims]);
 
   return (
     <div
