@@ -15,15 +15,20 @@ interface AuthModalProps {
 }
 
 type AuthForm = "name" | "email" | "password";
+const INITIAL_DATA = {
+  name: "",
+  email: "",
+  password: "",
+};
 
 function AuthModal({ isActive, handleClose }: AuthModalProps) {
-  const { claims } = useContext(AuthContexts);
+  const context = useContext(AuthContexts);
+  if (!context) {
+    throw new Error("asdasd");
+  }
+  const { claims } = context;
   const [isLogin, setIsLogin] = useState(true);
-  const [authForm, setAuthForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
+  const [authForm, setAuthForm] = useState(INITIAL_DATA);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     document.body.classList.add("hide-scrollbar");
@@ -44,8 +49,8 @@ function AuthModal({ isActive, handleClose }: AuthModalProps) {
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
     setLoading(true);
-    if (!isLogin) {
-      try {
+    try {
+      if (!isLogin) {
         const { data, error } = await supabase.auth.signUp({
           email: authForm.email,
           password: authForm.password,
@@ -55,22 +60,28 @@ function AuthModal({ isActive, handleClose }: AuthModalProps) {
             },
           },
         });
-
         if (error) {
           console.log(error);
         }
 
         return data;
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
       }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: authForm.email,
+        password: authForm.password,
+      });
+      if (error) {
+        console.log(error);
+      }
+      handleClose();
+      setAuthForm(INITIAL_DATA);
+      return data;
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
-  useEffect(() => {
-    console.log(claims);
-  }, [claims]);
 
   return (
     <div
@@ -95,6 +106,7 @@ function AuthModal({ isActive, handleClose }: AuthModalProps) {
                 name
               </label>
               <input
+                disabled={loading}
                 value={authForm.name}
                 className="p-4 px-5 bg-black border border-white/20"
                 id="name"
@@ -109,6 +121,7 @@ function AuthModal({ isActive, handleClose }: AuthModalProps) {
               email
             </label>
             <input
+              disabled={loading}
               value={authForm.email}
               className="p-4 px-5 bg-black border border-white/20"
               id="email"
@@ -122,6 +135,7 @@ function AuthModal({ isActive, handleClose }: AuthModalProps) {
               password
             </label>
             <input
+              disabled={loading}
               value={authForm.password}
               className="p-4 px-5 bg-black border border-white/20"
               id="password"
@@ -137,7 +151,7 @@ function AuthModal({ isActive, handleClose }: AuthModalProps) {
             {isLogin ? "sign in" : "create account"}
           </button>
         </form>
-        <button onClick={() => setIsLogin(!isLogin)}>
+        <button disabled={loading} onClick={() => setIsLogin(!isLogin)}>
           {isLogin
             ? "Dont have account ? register"
             : "already have account? login"}

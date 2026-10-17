@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useContext } from "react";
 import { IMAGE_CONFIG } from "../../utils/config";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router";
@@ -18,8 +18,15 @@ import {
   formatCurrency,
 } from "../../utils/utils";
 import Credit from "../../components/Credit";
+import { AuthContexts } from "../../Context/AuthContext";
 
 function DetailShow() {
+  const context = useContext(AuthContexts);
+  if (!context) {
+    throw new Error("error");
+  }
+
+  const { addList } = context;
   const { media_type, show_id } = useParams<{
     media_type: ShowType;
     show_id: string;
@@ -223,7 +230,13 @@ function DetailShow() {
                 )}
                 <div className="flex items-center gap-4 flex-wrap">
                   <button
-                    onClick={() => console.log(movieCertification())}
+                    onClick={() =>
+                      addList(
+                        Number(show_id),
+                        (isMovie ? detailData.title : detailData?.name) ?? "",
+                        detailData?.poster_path ?? "", media_type === 'movie' ? 'movie' : 'tv'
+                      )
+                    }
                     className="flex items-center gap-2 text-lg p-4 px-6 rounded bg-yellow-500/40 border border-yellow-500/60 font-bold capitalize"
                   >
                     <Plus strokeWidth={3} className="size-6" />

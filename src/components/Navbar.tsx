@@ -7,8 +7,9 @@ import {
   User,
   Search,
   LogIn,
-  type LucideIcon,
+  Bookmark,
   UserRound,
+  type LucideIcon,
 } from "lucide-react";
 import Portal from "./Portal";
 import SearchModal from "./SearchModal";
@@ -24,24 +25,32 @@ const NAVLINKS = [
 
 function Navbar() {
   const navigate = useNavigate();
-  const { claims, clearClaims } = useContext(AuthContexts);
+  const context = useContext(AuthContexts);
+  if (!context) {
+    throw new Error("error");
+  }
+
+  const { claims, clearClaims } = context;
   const menuRef = useRef<HTMLDivElement>(null);
   const [isModalActive, setIsModalActive] = useState(false);
   const [isMenuActive, setIsMenuActive] = useState(false);
   const [isLoginActive, setIsLoginActive] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     if (!claims) {
-      return setIsLoginActive(true);
+      setIsLoginActive(true);
+      return;
     }
-
+    setLoading(true);
     try {
-      supabase.auth.signOut();
-
+      await supabase.auth.signOut();
       clearClaims();
       navigate("/");
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -124,7 +133,16 @@ function Navbar() {
                 </div>
               </div>
               <div className="p-2">
+                {claims && (
+                  <Link
+                    className="p-3 px-4 w-full hover:bg-white/10 rounded flex items-center gap-4 capitalize"
+                    to="/list"
+                  >
+                    <Bookmark /> <span>my list</span>
+                  </Link>
+                )}
                 <button
+                  disabled={loading}
                   className="p-3 px-4 w-full hover:bg-white/10 rounded flex items-center gap-4 capitalize"
                   onClick={handleLogin}
                 >

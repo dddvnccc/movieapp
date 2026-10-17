@@ -5,6 +5,7 @@ import DetailShow from "./pages/DetailShow/DetailShow";
 import { useLocation } from "react-router";
 import { useEffect } from "react";
 import ShowList from "./pages/ShowList/ShowList";
+import List from "./pages/List/List";
 function App() {
   const location = useLocation();
   useEffect(() => {
@@ -18,6 +19,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="/:media_type" element={<ShowList />} />
           <Route path="/:media_type/detail/:show_id" element={<DetailShow />} />
+          <Route path="/List" element={<List />} />
         </Route>
       </Routes>
     </>
