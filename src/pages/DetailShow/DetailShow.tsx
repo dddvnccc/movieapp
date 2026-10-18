@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { IMAGE_CONFIG } from "../../utils/config";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router";
@@ -9,7 +9,16 @@ import {
   getExtra,
   getCollectionDetail,
 } from "../../utils/fetch";
-import { Film, Plus, Star, ThumbsDown, ThumbsUp, Tv } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Film,
+  Plus,
+  Star,
+  ThumbsDown,
+  ThumbsUp,
+  Tv,
+} from "lucide-react";
 import {
   generateRuntime,
   formatDate,
@@ -26,7 +35,6 @@ function DetailShow() {
     throw new Error("error");
   }
 
-  const { addList } = context;
   const { media_type, show_id } = useParams<{
     media_type: ShowType;
     show_id: string;
@@ -168,7 +176,7 @@ function DetailShow() {
         </div>
         <div className="relative z-10">
           <div className="max-w-[90vw] w-full mx-auto min-h-screen flex flex-col justify-end pt-32 lg:pt-0 lg:pb-16">
-            <div className="flex gap-8 lg:flex-row justify-between lg:items-end flex-col-reverse">
+            <div className="flex gap-8 md:flex-row justify-between md:items-end flex-col-reverse">
               <div className="flex flex-col gap-4 flex-1">
                 <div>
                   <h1 className="text-4xl xl:text-5xl font-extrabold mb-2">
@@ -229,19 +237,14 @@ function DetailShow() {
                   </div>
                 )}
                 <div className="flex items-center gap-4 flex-wrap">
-                  <button
-                    onClick={() =>
-                      addList(
-                        Number(show_id),
-                        (isMovie ? detailData.title : detailData?.name) ?? "",
-                        detailData?.poster_path ?? "", media_type === 'movie' ? 'movie' : 'tv'
-                      )
+                  <WatchlistButton
+                    media_type={media_type}
+                    show_id={detailData?.id ?? 0}
+                    title={
+                      isMovie ? detailData.title : (detailData?.name ?? "")
                     }
-                    className="flex items-center gap-2 text-lg p-4 px-6 rounded bg-yellow-500/40 border border-yellow-500/60 font-bold capitalize"
-                  >
-                    <Plus strokeWidth={3} className="size-6" />
-                    watchlist
-                  </button>
+                    poster={detailData?.poster_path ?? ""}
+                  />
                   <button className="p-4 bg-white/40 rounded gap-4 flex items-center font-semibold capitalize">
                     <ThumbsUp />
                     like
@@ -255,7 +258,7 @@ function DetailShow() {
                   </a>
                 </div>
               </div>
-              <div className="min-w-[250px] w-fit lg:w-[15vw] border border-white/20 shadow-xl shadow-white/10 rounded-lg">
+              <div className="min-w-[250px] w-fit md:w-[15vw] border border-white/20 shadow-xl shadow-white/10 rounded-lg">
                 <img
                   className="rounded-lg w-full"
                   src={IMAGE_CONFIG.base_url + "w342" + detailData?.poster_path}
@@ -438,6 +441,53 @@ const Information = ({
         {title}
       </span>
       <p className="font-bold capitalize">{content}</p>
+    </div>
+  );
+};
+
+const WatchlistButton = ({
+  show_id,
+  media_type,
+  title,
+  poster,
+}: {
+  show_id: number;
+  media_type: ShowType;
+  title: string;
+  poster: string;
+}) => {
+  const context = useContext(AuthContexts);
+  if (!context) {
+    throw new Error("error");
+  }
+  const [isOpen, setIsOpen] = useState(false);
+  const { addList, checkShow, removeShow } = context;
+  const Icon = checkShow(show_id) ? Check : ChevronDown;
+  const handleWatchlist = () => {};
+  return (
+    <div className="relative">
+      <div
+        style={{
+          opacity: isOpen ? "1" : "0",
+          pointerEvents: isOpen ? "auto" : "none",
+        }}
+        className="absolute bg-black border border-white/10 rounded top-full mt-4 z-20 inset-x-0 transition-all duration-300"
+      >
+        <ul className="flex flex-col p-2">
+          {["plan to watch", "completed", "watching", "dropped"].map((item) => (
+            <li key={item} className="leading-none w-full">
+              <button className="text-start p-4 py-3 capitalize hover:bg-white/20 rounded-md w-full">{item}</button>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 text-lg p-4 px-6 rounded bg-yellow-500/40 border border-yellow-500/60 font-bold capitalize"
+      >
+        <Icon strokeWidth={3} className="size-6" />
+        {checkShow(Number(show_id)) ? "on your list" : "add to list"}
+      </button>
     </div>
   );
 };

@@ -8,8 +8,10 @@ export type AuthContextType = {
     show_id: number,
     show_name: string,
     show_poster: string | null,
-    show_type: ShowType
+    show_type: ShowType,
   ) => void;
+  checkShow: (show_id: number) => boolean;
+  removeShow: (show_id:number) => void;
 };
 
 export interface List {
