@@ -9,9 +9,12 @@ export type AuthContextType = {
     show_name: string,
     show_poster: string | null,
     show_type: ShowType,
+    show_status: string,
   ) => void;
   checkShow: (show_id: number) => boolean;
-  removeShow: (show_id:number) => void;
+  removeShow: (show_id: number) => void;
+  updateList: (show_id: number, column: string, value: string) => void;
+  getShowById: (show_id: number) => List | undefined;
 };
 
 export interface List {
@@ -22,4 +25,5 @@ export interface List {
   show_name: string;
   show_poster: string | null;
   show_type: ShowType;
+  status: string
 }

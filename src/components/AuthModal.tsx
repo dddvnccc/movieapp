@@ -72,6 +72,7 @@ function AuthModal({ isActive, handleClose }: AuthModalProps) {
       });
       if (error) {
         console.log(error);
+        return
       }
       handleClose();
       setAuthForm(INITIAL_DATA);

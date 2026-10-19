@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { IMAGE_CONFIG } from "../../utils/config";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router";
@@ -151,9 +151,9 @@ function DetailShow() {
         src={IMAGE_CONFIG.base_url + "w1280" + backdrop_path}
         className="fixed inset-0 h-full object-cover w-full"
       />
-      <div className="relative bg-black/60 backdrop-blur-2xl">
+      <div className="relative bg-black/70 backdrop-blur-2xl">
         <div className="absolute inset-0 bg-black h-screen">
-          <div className="absolute inset-0 bg-gradient-to-b from-30% from-black/40 to-black"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-30% from-black/40 to-black to-80%"></div>
 
           {!backdrop_path ? (
             <div className="bg-black h-full flex items-center justify-center">
@@ -174,47 +174,42 @@ function DetailShow() {
           )}
           <div className="h-[250px] bg-gradient-to-b from-black to-transparent z-10 top-full inset-x-0 absolute"></div>
         </div>
-        <div className="relative z-10">
-          <div className="max-w-[90vw] w-full mx-auto min-h-screen flex flex-col justify-end pt-32 lg:pt-0 lg:pb-16">
-            <div className="flex gap-8 md:flex-row justify-between md:items-end flex-col-reverse">
+        <div className="relative z-20">
+          <div className="max-w-[95vw] xl:max-w-[90vw] w-full mx-auto min-h-screen flex flex-col justify-end pt-32 lg:pt-0 md:pb-16">
+            <div className="flex md:flex-row justify-between md:items-end flex-col-reverse">
               <div className="flex flex-col gap-4 flex-1">
                 <div>
-                  <h1 className="text-4xl xl:text-5xl font-extrabold mb-2">
+                  <h1 className="text-5xl xl:text-6xl font-extrabold mb-2">
                     {title}
                   </h1>
-                  <p className="font-semibold text-slate-400 italic">
-                    {tagline}
-                  </p>
+                  <p className="font-medium text-yellow-500/80">{tagline}</p>
                 </div>
-                <div className="mt-1 text-xs lg:text-sm flex items-center gap-4 flex-wrap">
+                <div className="mt-1 text-xs md:text-sm flex items-center gap-4 flex-wrap">
                   <div
                     style={{ background: ratingBackground(vote_average || 0) }}
-                    className="font-bold flex items-center gap-1 text-lg p-1 px-4 rounded"
+                    className="font-bold flex items-center gap-2 p-1 px-4 rounded text-base"
                   >
-                    <Star size={15} />
+                    <Star className="fill-current" size={14} />
                     {vote_average?.toFixed(1)}
-                    <span className="font-medium text-sm">
-                      ({formatVoteCount(String(vote_count))})
-                    </span>
                   </div>
-                  <div className="flex items-center flex-wrap gap-4">
-                    {genres?.map((item) => (
-                      <span
-                        key={item.id}
-                        className="p-2 px-4 bg-white/20 border border-white/30 text-white rounded-lg font-medium"
-                      >
-                        {item.name}
-                      </span>
-                    ))}
-                  </div>
-                  <span className="px-4 p-2 bg-white/20 rounded border border-white/40">
+                  <span className="px-4 p-2 rounded bg-red-500 text-xs font-bold">
                     {isMovie
                       ? (movieCertification()?.release_dates[0].certification ??
                         "No Rating")
                       : (tvCertification()?.rating ?? "No Rating")}
                   </span>
+                  <div className="flex items-center flex-wrap gap-2">
+                    {genres?.map((item) => (
+                      <span
+                        key={item.id}
+                        className="p-1.5 px-2.5 bg-zinc-800/60 border border-white/20 text-white rounded"
+                      >
+                        {item.name}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <p className="text-sm md:text-base md:max-w-[40vw] line-clamp-2 font-medium leading-relaxed text-neutral-400">
+                <p className="text-sm md:text-base md:max-w-[60vw] lg:max-w-[40vw] line-clamp-2 font-medium leading-relaxed text-neutral-400">
                   {overview}
                 </p>
                 {isTv && detailData.created_by.length > 0 && (
@@ -236,7 +231,7 @@ function DetailShow() {
                     </span>
                   </div>
                 )}
-                <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex my-4 items-center gap-4 flex-wrap">
                   <WatchlistButton
                     media_type={media_type}
                     show_id={detailData?.id ?? 0}
@@ -307,14 +302,14 @@ function DetailShow() {
             </div>
           </div>
         </div>
-        <div className="max-w-[90vw] w-full mx-auto py-8 relative z-10">
-          <div className="mt-8">
+        <div className="max-w-[95vw] xl:max-w-[90vw] w-full mx-auto py-8 relative z-10">
+          <div className="">
             <h2 className="font-bold text-2xl mb-4">Video</h2>
-            <ul className="flex items-center flex-wrap gap-6">
+            <ul className="grid grid-cols-[repeat(auto-fit,_minmax(250px,400px))] gap-4">
               {mediaList.reverse().map((item) => (
                 <li
                   key={item.id}
-                  className="flex flex-col gap-2 relative rounded-lg border border-white/20 w-[400px] h-[250px]"
+                  className="flex flex-col gap-2 relative rounded-lg border border-white/20 w-full h-[250px]"
                 >
                   <span className="absolute top-4 right-4 bg-blue-500/40 font-medium tracking-wide capitalize px-3 rounded-full p-1 text-white text-xs">
                     {item.type}
@@ -456,37 +451,81 @@ const WatchlistButton = ({
   title: string;
   poster: string;
 }) => {
+  const ref = useRef<HTMLDivElement | null>(null);
   const context = useContext(AuthContexts);
   if (!context) {
     throw new Error("error");
   }
+
   const [isOpen, setIsOpen] = useState(false);
-  const { addList, checkShow, removeShow } = context;
+  const { addList, checkShow, removeShow, updateList, getShowById } = context;
   const Icon = checkShow(show_id) ? Check : ChevronDown;
-  const handleWatchlist = () => {};
+  const showStatus = getShowById(show_id)?.status;
+  const handleAddList = (col: string, val: string) => {
+    if (checkShow(show_id)) {
+      updateList(show_id, col, val);
+      return;
+    }
+    addList(show_id, title, poster, media_type, val);
+    setIsOpen(false);
+  };
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (isOpen && ref.current && !ref.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    window.addEventListener("click", handleOutsideClick);
+
+    return () => {
+      window.removeEventListener("click", handleOutsideClick);
+    };
+  }, [isOpen]);
+
   return (
-    <div className="relative">
+    <div ref={ref} className="relative">
       <div
         style={{
           opacity: isOpen ? "1" : "0",
           pointerEvents: isOpen ? "auto" : "none",
         }}
-        className="absolute bg-black border border-white/10 rounded top-full mt-4 z-20 inset-x-0 transition-all duration-300"
+        className="absolute bg-gray-900 border border-white/10 rounded top-full h-auto mt-4 z-20 inset-x-0 transition-all duration-300 min-w-[250px]"
       >
-        <ul className="flex flex-col p-2">
-          {["plan to watch", "completed", "watching", "dropped"].map((item) => (
-            <li key={item} className="leading-none w-full">
-              <button className="text-start p-4 py-3 capitalize hover:bg-white/20 rounded-md w-full">{item}</button>
-            </li>
-          ))}
-        </ul>
+        <div className="text-sm font-medium flex flex-col p-2">
+          <ul className="flex flex-col gap-2 border-b border-white/10 pb-2">
+            {["plan to watch", "completed", "watching", "dropped"].map(
+              (item) => (
+                <li key={item} className="leading-none w-full">
+                  <button
+                    onClick={() => handleAddList("status", item)}
+                    className={`text-start p-4 py-3 capitalize hover:bg-white/20 rounded-md w-full ${showStatus === item ? "bg-white/20" : "bg-none"}`}
+                  >
+                    {item}
+                  </button>
+                </li>
+              ),
+            )}
+          </ul>
+          <button
+            onClick={() => removeShow(show_id)}
+            className="p-4 py-3 capitalize hover:bg-red-500/20 rounded-md w-full text-start mt-2"
+          >
+            remove this
+          </button>
+        </div>
       </div>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 text-lg p-4 px-6 rounded bg-yellow-500/40 border border-yellow-500/60 font-bold capitalize"
+        className={`flex items-center gap-2 p-4 px-6 rounded bg-[--main-color] text-[--main-black] font-bold capitalize transition-all duration-300`}
       >
         <Icon strokeWidth={3} className="size-6" />
-        {checkShow(Number(show_id)) ? "on your list" : "add to list"}
+        <span className="translate-y-[0.5px]">
+          {checkShow(show_id)
+            ? getShowById(Number(show_id))?.status
+            : "add to list"}
+        </span>
       </button>
     </div>
   );

@@ -10,11 +10,18 @@ export function AuthContext({ children }: { children: React.ReactNode }) {
   const [claims, setClaims] = useState<JwtPayload | undefined>(undefined);
   const [list, setList] = useState<List[] | []>([]);
 
+  const getId = (show_id: number) => {
+    return list.find(
+      (item) => item.user_id === claims?.sub && item.show_id === show_id,
+    )?.id;
+  };
+
   const addList = async (
     show_id: number,
     show_name: string,
     show_poster: string | null,
     show_type: ShowType,
+    show_status: string,
   ) => {
     if (!claims?.sub || list.some((item) => item.show_id === show_id)) return;
 
@@ -26,6 +33,7 @@ export function AuthContext({ children }: { children: React.ReactNode }) {
       show_name,
       show_poster,
       show_type,
+      status: show_status,
     };
     setList((prev) =>
       prev.some((item) => item.show_id === newList.show_id)
@@ -40,20 +48,40 @@ export function AuthContext({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateList = async (show_id: number, column: string, value: string) => {
+    setList((prev) =>
+      prev.map((item) =>
+        item.id === getId(show_id) ? { ...item, [column]: value } : item,
+      ),
+    );
+    try {
+      const { error } = await supabase
+        .from("list")
+        .update({ [column]: value })
+        .eq("id", getId(show_id));
+      if (error) console.log(error);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const checkShow = (show_id: number) => {
     return list.some((item) => item.show_id === show_id);
   };
 
-  const removeShow = async (show_id: number) => {
-    const listItem = list.find(
-      (item) => item.user_id === claims?.sub && item.show_id === show_id,
+  const getShowById = (show_id: number) => {
+    return list.find(
+      (item) => item.show_id === show_id && item.user_id === claims?.sub,
     );
-    setList(prev => prev.filter(item => item.show_id !== show_id))
+  };
+
+  const removeShow = async (show_id: number) => {
+    setList((prev) => prev.filter((item) => item.show_id !== show_id));
     try {
       const { error } = await supabase
         .from("list")
         .delete()
-        .eq("id", listItem?.id);
+        .eq("id", getId(show_id));
       if (error) console.error(error);
     } catch (error) {
       console.error(error);
@@ -106,14 +134,21 @@ export function AuthContext({ children }: { children: React.ReactNode }) {
           show_name: string,
           show_poster: string | null,
           show_type: ShowType,
+          show_status: string,
         ) {
-          addList(show_id, show_name, show_poster, show_type);
+          addList(show_id, show_name, show_poster, show_type, show_status);
         },
         checkShow: function (show_id: number) {
           return checkShow(show_id);
         },
         removeShow: function (show_id: number) {
           removeShow(show_id);
+        },
+        updateList: function (show_id: number, column: string, value: string) {
+          updateList(show_id, column, value);
+        },
+        getShowById: function (show_id: number) {
+          return getShowById(show_id);
         },
       }}
     >
