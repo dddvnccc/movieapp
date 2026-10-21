@@ -5,6 +5,14 @@ import { getDetailShow, getShowCredit } from "../../utils/fetch";
 import type { ShowType } from "../../types/fetch";
 import { IMAGE_CONFIG } from "../../utils/config";
 import { formatDate, generateRuntime } from "../../utils/utils";
+import {
+  ArrowBigDown,
+  Plus,
+  Star,
+  User,
+  UserCircle,
+  UserCircle2,
+} from "lucide-react";
 
 function DetailShow() {
   const { media_type, show_id } = useParams<{
@@ -12,7 +20,7 @@ function DetailShow() {
     show_id: string;
   }>();
 
-  const { data: detailData } = useQuery({
+  const { data: detailData, isFetching: detailFetching } = useQuery({
     queryKey: ["detail", media_type, show_id],
     queryFn: () => getDetailShow(media_type!, Number(show_id)),
     enabled: !!media_type && !!show_id,
@@ -26,6 +34,8 @@ function DetailShow() {
     staleTime: Infinity,
   });
   const {
+    vote_average,
+    vote_count,
     backdrop_path,
     poster_path,
     tagline,
@@ -41,156 +51,96 @@ function DetailShow() {
     ? detailData.release_date
     : detailData?.first_air_date;
 
+  const scrollToSection = () => {
+    document
+      .querySelector("#about")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  if (detailFetching) {
+    return <div className="bg-black"></div>;
+  }
+
   return (
-    <div className="p-8">
-      <div className="fixed -z-10 inset-0 ">
-        <div className="absolute bg-black/80 backdrop-blur-md inset-0"></div>
+    <div className="">
+      <div className="h-screen relative group/hero">
+        <div className="bg-black/30 absolute inset-0 flex justify-center flex-col gap-4 p-4 md:px-12">
+          <button
+            onClick={scrollToSection}
+            className="absolute bottom-8 inset-x-1/2 transition-all opacity-0 duration-300 group-hover/hero:opacity-100"
+          >
+            <ArrowBigDown />
+          </button>
+          <h1 className="text-[4rem] lg:text-[6rem] font-bold uppercase leading-none max-w-[60%]">
+            {title}
+          </h1>
+          <p className="font-bold">{releaseDate?.split("-")[0]}</p>
+
+          <div className="absolute bottom-8 flex items-center opacity-0 gap-8 transition-all duration-300 group-hover/hero:opacity-100 delay-75">
+            <button className="border p-4 px-6 leading-none uppercase transition-all duration-200 hover:bg-white hover:text-black">
+              play trailer
+            </button>
+            <button className="group overflow-hidden rounded-lg text-white font-semibold">
+              Add to list
+            </button>
+          </div>
+        </div>
         <img
-          className="w-full"
+          className="w-full h-full object-cover"
           src={IMAGE_CONFIG.base_url + "w1280" + backdrop_path}
         />
       </div>
-      <div className="max-w-screen-xl w-full mx-auto mt-12 md:mt-32">
-        <div className="flex flex-col sm:flex-row gap-10 items-start">
+      <div id="about" className="bg-black pt-32 px-12">
+        <h2 className="text-3xl font-bold uppercase">About</h2>
+        <div className="flex items-start gap-12 mt-8">
           <img
-            className="rounded-md h-full w-auto border border-white/20"
+            className="w-[250px] rounded-lg"
             src={IMAGE_CONFIG.base_url + "w342" + poster_path}
           />
-          <div className="flex flex-col gap-5 w-full">
-            <div className="flex gap-4 items-center uppercase text-sm font-semibold">
-              <span className="">
-                {media_type === "movie" ? media_type : "tv series"}
-              </span>
-              <span className="">
-                <img
-                  className="w-4 h-auto"
-                  src={`https://flagcdn.com/16x12/${origin_country?.[0]?.toLocaleLowerCase()}.png`}
-                  title={origin_country?.[0]}
-                />
-              </span>
-              <span>{status}</span>
-            </div>
-            <div className="flex flex-col gap-2">
-              <h1 className="text-2xl md:text-5xl font-bold">{title}</h1>
-              {tagline && (
-                <q className="text-yellow-200/70 text-sm md:text-base">
-                  {tagline}
-                </q>
+          <div className="grid grid-cols-2 gap-4">
+            <p className="text-pretty leading-relaxed">{overview}</p>
+            <div className="">
+              <div className="flex items-start gap-4">
+                <p className="uppercase font-semibold">release date</p>
+                <p className="font-bold">{releaseDate}</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <p>duration</p>
+                <p>{isMovie && detailData?.runtime}</p>
+              </div>
+              {isMovie && (
+                <div className="flex items-start gap-2">
+                  <p>budget</p>
+                  <p>{isMovie && detailData?.budget}</p>
+                </div>
+              )}
+              {isMovie && (
+                <div className="flex items-start gap-2">
+                  <p>revenue</p>
+                  <p>{isMovie && detailData?.revenue}</p>
+                </div>
               )}
             </div>
-            {(genres?.length ?? 0) > 0 && (
-              <div className="flex gap-2 items-center flex-wrap">
-                {genres?.map((item) => (
-                  <span
-                    className="p-1.5 text-xs px-4 border border-white/20 bg-black rounded-lg font-medium text-slate-400"
-                    key={item.id}
-                  >
-                    {item.name}
-                  </span>
-                ))}
-              </div>
-            )}
-            <p className="leading-relaxed line-clamp-3">{overview}</p>
-            <div className="flex flex-col gap-2">
-              <button className="bg-yellow-300 p-3 px-6 text-black rounded-lg font-bold capitalize">
-                add to list
-              </button>
-              <a
-                className="bg-slate-600 p-3 rounded-lg text-center"
-                href={homepage}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                official site
-              </a>
-            </div>
           </div>
         </div>
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold">About</h2>
-          <div className="mt-4 rounded-xl bg-white/5 flex flex-wrap gap-4 p-6 px-8 w-full">
-            <AboutInfo
-              title="release date"
-              data={formatDate(releaseDate ?? "")}
-            />
-            <AboutInfo
-              title="original title"
-              data={
-                isMovie ? detailData.original_title : detailData?.original_name
-              }
-            />
-            <AboutInfo
-              title={media_type === "movie" ? "duration" : "number of seasons"}
-              data={
-                isMovie
-                  ? generateRuntime(detailData.runtime)
-                  : `${detailData?.number_of_seasons} season${(detailData?.number_of_seasons ?? 0) > 2 ? "s" : ""}`
-              }
-            />
-            {isMovie && detailData?.budget !== 0 && (
-              <AboutInfo title="budget" data={isMovie && detailData.budget} />
-            )}
-            {isMovie && detailData?.revenue !== 0 && (
-              <AboutInfo title="revenue" data={isMovie && detailData.revenue} />
-            )}
-          </div>
-        </div>
-        <div className="mt-12">
-          <h2 className="font-bold text-2xl mb-4">Cast</h2>
-          <ul className="flex items-start gap-8 overflow-x-auto hide-scrollbar">
-            {creditData?.cast.slice(0, 10).map((item) => (
-              <li
-                key={item.cast_id}
-                className="min-w-[150px] flex flex-col gap-2"
-              >
-                <img
-                  className="rounded-lg w-full h-[160px] object-cover"
-                  src={IMAGE_CONFIG.base_url + "w185" + item.profile_path}
-                />
-                <div>
-                  <h3 className="truncate">{item.name}</h3>
-                  <p>{item.character}</p>
-                </div>
-              </li>
-            ))}
+      </div>
+      <div className="px-12 pt-12 bg-black">
+        <h2 className="text-3xl font-bold uppercase">Cast</h2>
+        <ul className="flex gap-8 items-start overflow-x-auto mt-8">
+          {creditData?.cast.slice(0, 10).map((item) => (
+            <li key={item.cast_id} className="min-w-[150px]">
+              <img className="h-[200px] rounded-lg w-full object-cover" src={IMAGE_CONFIG.base_url + "w185" + item.profile_path} />
+              <h3 className="truncate">{item.name}</h3>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="px-12 pt-12 bg-black">
+          <h2 className="text-3xl font-bold uppercase">you may also like</h2>
+              <ul className="flex gap-8 items-start overflow-x-auto mt-8">
+                {}
           </ul>
-        </div>
-        <div className="mt-12">
-          <h2 className="font-bold text-2xl mb-4">Crew</h2>
-          <ul className="flex items-start gap-8 overflow-x-auto hide-scrollbar">
-            {Array.from(
-              new Map(
-                creditData?.crew.map((item) => [item.job, item]),
-              ).values(),
-            )
-              .slice(0, 10)
-              .map((item) => (
-                <li
-                  key={item.credit_id}
-                  className="min-w-[150px] flex flex-col gap-2"
-                >
-                  <img
-                    className="rounded-lg w-full h-[160px] object-cover"
-                    src={IMAGE_CONFIG.base_url + "w185" + item.profile_path}
-                  />
-                  <div>
-                    <h3 className="truncate">{item.name}</h3>
-                    <p className="truncate">{item.job}</p>
-                  </div>
-                </li>
-              ))}
-          </ul>
-        </div>
-        <div className="mt-12">
-          <h2 className="font-bold text-2xl mb-4">videos</h2>
-          <ul className="flex items-start gap-8 overflow-x-auto hide-scrollbar">
-            {detailData?.videos?.results.map((item) => (
-              <li className="min-w-[350px]" key={item.id}>
-                <img src={`https://i.ytimg.com/vi/${item.key}/mqdefault.jpg`} />
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
     </div>
   );

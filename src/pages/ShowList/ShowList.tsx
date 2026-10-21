@@ -176,10 +176,13 @@ function ShowList() {
                 {currentData?.overview}
               </p>
               <div>
-                <button className="flex items-center gap-4 rounded-lg px-6 py-4 bg-yellow-500/40 font-bold border border-yellow-400/60">
+                <Link
+                  to={`detail/${currentData?.id}`}
+                  className="flex w-fit items-center gap-4 rounded-lg px-6 py-4 bg-yellow-500/40 font-bold border border-yellow-400/60"
+                >
                   <Info />
                   Detail Show
-                </button>
+                </Link>
               </div>
             </div>
           </div>

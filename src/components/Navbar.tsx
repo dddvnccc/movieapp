@@ -79,7 +79,7 @@ function Navbar() {
           handleClose={() => setIsLoginActive(false)}
         />
       </Portal>
-      <header className="fixed z-50 max-w-screen-md w-auto inset-x-0 top-4 bottom-auto mx-4 sm:mx-auto bg-black/80 border border-white/20 rounded-full p-3 px-8">
+      <header className="fixed z-50 max-w-screen-lg w-auto inset-x-0 top-0 bottom-auto mx-4 sm:mx-auto p-3 px-8">
         <nav className="flex items-center gap-6">
           <span className="font-bold flex-1 md:flex-none">
             <span className="uppercase">temu</span>flix

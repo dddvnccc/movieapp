@@ -4,7 +4,7 @@ import { getGenreList, ratingBackground } from "../utils/utils";
 import { getTrending } from "../utils/fetch";
 import { IMAGE_CONFIG } from "../utils/config";
 import { useQuery } from "@tanstack/react-query";
-import { data, useOutletContext } from "react-router";
+import { data, Link, useOutletContext } from "react-router";
 import { Info } from "lucide-react";
 import Rating from "./Rating";
 import HorizontalCard from "./HorizontalCard";
@@ -39,7 +39,7 @@ function Hero() {
   const firstGenre = getGenreList(genre_ids ?? [], uniqueGenre)[0];
 
   useEffect(() => {
-    if (!trendingAll) return
+    if (!trendingAll) return;
     const indexTimer = setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % MAX_DATA);
     }, 10000);
@@ -92,10 +92,13 @@ function Hero() {
               {overview}
             </p>
             <div>
-              <button className="flex items-center gap-2 px-5 py-4 capitalize text-[--main-black] font-bold bg-[--main-color] rounded">
+              <Link
+                to={`/${media_type}/detail/${currentData?.id}`}
+                className="flex items-center gap-2 w-fit px-5 py-4 capitalize text-[--main-black] font-bold bg-[--main-color] rounded"
+              >
                 <Info size={20} strokeWidth={3} />
                 detail show
-              </button>
+              </Link>
             </div>
           </div>
           <div className="">
