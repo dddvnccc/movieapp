@@ -6,7 +6,7 @@ import {
   Link,
 } from "react-router";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { getTrending, getShowList, getAllShow } from "../../utils/fetch";
+import { getShowList, getAllShow } from "../../utils/fetch";
 import type {
   Genre,
   ShowType,
@@ -14,9 +14,7 @@ import type {
   TrendingTv,
 } from "../../types/fetch";
 import { IMAGE_CONFIG } from "../../utils/config";
-import { getGenreList, ratingBackground } from "../../utils/utils";
-import Rating from "../../components/Rating";
-import { Dot, Info } from "lucide-react";
+import { getGenreList } from "../../utils/utils";
 import Pagination from "../../components/Pagination";
 import Portal from "../../components/Portal";
 import FilterModal from "../../components/FilterModal";
@@ -29,12 +27,6 @@ function ShowList() {
   const { media_type } = useParams<{ media_type: ShowType | undefined }>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
-  const { data: trendingData } = useQuery({
-    queryKey: ["trending", media_type],
-    queryFn: () => getTrending(media_type),
-    staleTime: Infinity,
-    enabled: !!media_type,
-  });
 
   const [filter, setFilter] = useState({});
   const genre = searchParams.get("genre") ?? "";
@@ -69,24 +61,6 @@ function ShowList() {
     enabled: currentList === "all",
   });
 
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const currentData: TrendingMovie | TrendingTv | undefined = trendingData
-    ? trendingData?.results[currentIndex]
-    : undefined;
-
-  useEffect(() => {
-    if (!trendingData?.results) return;
-    const heroTimer = setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % trendingData?.results.length);
-    }, 15000);
-
-    return () => clearTimeout(heroTimer);
-  }, [currentIndex, trendingData?.results]);
-
-  useEffect(() => {
-    setCurrentIndex(0);
-  }, [media_type]);
-
   useEffect(() => {
     const pageParam = searchParams.get("page");
     if (!pageParam) return;
@@ -120,7 +94,7 @@ function ShowList() {
   }, [isModalOpen]);
 
   return (
-    <div className="bg-black p-4 relative">
+    <div className="bg-black relative">
       <Portal>
         <FilterModal
           handleClose={() => setIsModalOpen(false)}
@@ -132,165 +106,42 @@ function ShowList() {
           searchParams={searchParams}
         />
       </Portal>
-      <div className="bg-black inset-0 fixed -z-10"></div>
-      <div className="absolute inset-0 overflow-hidden h-screen">
-        <div className="absolute inset-0 z-10 bg-gradient-to-b from-black/10 from-20% to-black"></div>
-        <img
-          key={currentIndex || media_type}
-          fetchPriority="high"
-          className="showBg w-full object-cover h-full object-center"
-          src={IMAGE_CONFIG.base_url + "original" + currentData?.backdrop_path}
-        />
-      </div>
-      <div className="max-w-[90vw] mx-auto relative z-20 top-[40vh]">
-        <div key={currentIndex || media_type} className="w-full">
-          <div className="relative flex items-center gap-8">
-            <div className="showDescription flex flex-col gap-5">
-              <h1 className="text-6xl font-bold">
-                {currentData && "title" in currentData
-                  ? currentData.title
-                  : currentData?.name}
-              </h1>
-              <div className="flex items-center gap-4 font-semibold text-neutral-300">
-                <Rating
-                  size={16}
-                  rating={currentData?.vote_average ?? 0}
-                  background={ratingBackground(currentData?.vote_average ?? 0)}
-                />
-                <span className="p-1 px-4 rounded border border-white/20 bg-white/10">
-                  {
-                    getGenreList(currentData?.genre_ids ?? [], uniqueGenre)?.[0]
-                      ?.name
-                  }
-                </span>
-                <span className="p-1 px-4 rounded border border-white/20 bg-white/10">
-                  {
-                    (currentData && "title" in currentData
-                      ? currentData.release_date
-                      : currentData?.first_air_date
-                    )?.split("-")[0]
-                  }
-                </span>
+      <section className="relative bg-black pt-32 px-4 xl:px-12 min-h-screen">
+        <h1 className="text-[3rem] xl:text-[6rem] font-extrabold uppercase">
+          {media_type === "tv" ? "tv series" : "movies"}
+        </h1>
+        <ul className="grid grid-cols-1 xl:grid-cols-4 gap-4 mt-8">
+          {listData?.results.map((item) => (
+            <li className="relative group/card" key={item.id}>
+              <div className="absolute inset-0 p-4 bg-black/30 hover:bg-black/60 transition-all duration-300 flex flex-col justify-end border-4 border-transparent group-hover/card:border-white gap-1">
+                <h3 className="font-bold line-clamp-2 text-xl">
+                  {"title" in item ? item.title : item.name}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <span>
+                    {
+                      ("title" in item
+                        ? item.release_date
+                        : item.first_air_date
+                      ).split("-")[0]
+                    }
+                  </span>
+                  <span>
+                    {getGenreList(item.genre_ids, uniqueGenre)[0]?.name}
+                  </span>
+                </div>
               </div>
-              <p className="lg:max-w-[40vw] text-lg line-clamp-2">
-                {currentData?.overview}
-              </p>
-              <div>
-                <Link
-                  to={`detail/${currentData?.id}`}
-                  className="flex w-fit items-center gap-4 rounded-lg px-6 py-4 bg-yellow-500/40 font-bold border border-yellow-400/60"
-                >
-                  <Info />
-                  Detail Show
-                </Link>
-              </div>
-            </div>
-          </div>
+              <img
+                className="w-full"
+                src={IMAGE_CONFIG.secure_base_url + "w300" + item.backdrop_path}
+              />
+            </li>
+          ))}
+        </ul>
+        <div className="mt-8">
+        <Pagination page={currentPage} totalPage={MAXPAGE} />
         </div>
-        <div className="mt-32">
-          <h2 className="font-bold text-2xl mb-8">ShowList {media_type}</h2>
-          <div className="flex items-center gap-4 justify-between">
-            <div className="flex items-center gap-4">
-              {SHOW_LIST.map((item) => (
-                <button
-                  key={item}
-                  style={{ color: currentList === item ? "yellow" : "white" }}
-                  onClick={() => setSearchParams({ category: item })}
-                  className="text-lg uppercase font-semibold"
-                >
-                  {item.split("_").join(" ")}
-                </button>
-              ))}
-            </div>
-            {currentList === "all" && (
-              <button onClick={() => setIsModalOpen(true)}>filter</button>
-            )}
-          </div>
-
-          <ul className="grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 mt-8">
-            {listFetching || allFetching
-              ? Array.from({ length: 20 }).map((_, i) => (
-                  <li key={i} className="flex flex-col gap-2">
-                    <div className="aspect-video w-full rounded-lg bg-white/10 animate-pulse" />
-                    <div className="h-5 w-3/4 rounded bg-white/10 animate-pulse" />
-                  </li>
-                ))
-              : (currentList !== "all" ? listData : allData)?.results.map(
-                  (item) => (
-                    <li
-                      key={item.id}
-                      className="flex flex-col gap-2 rounded-lg"
-                    >
-                      <div className="relative">
-                        <div className="absolute inset-0 justify-end items-end flex bg-black/20">
-                          <span
-                            style={{
-                              background: "black",
-                            }}
-                            className="p-1.5 px-2 rounded rounded-bl-none rounded-tr-none font-bold"
-                          >
-                            {item.vote_average.toFixed(1)}
-                          </span>
-                        </div>
-
-                        <img
-                          className="w-full aspect-video object-cover rounded border border-white/20"
-                          src={
-                            IMAGE_CONFIG.base_url + "w300" + item.backdrop_path
-                          }
-                          alt={"title" in item ? item.title : item.name}
-                        />
-                      </div>
-
-                      <div className="flex flex-col gap-0">
-                        <Link to={`detail/${item.id}`}>
-                          <h3 className="line-clamp-1 text-lg font-bold">
-                            {"title" in item ? item.title : item.name}
-                          </h3>
-                        </Link>
-                        <div className="text-sm flex items-center gap-0 text-neutral-500 font-medium">
-                          <span>
-                            {
-                              ("title" in item
-                                ? item.release_date
-                                : item.first_air_date
-                              ).split("-")[0]
-                            }
-                          </span>
-                          <Dot />
-                          <span>
-                            {getGenreList(item.genre_ids, uniqueGenre)[0]?.name}
-                          </span>
-                        </div>
-                      </div>
-                    </li>
-                  ),
-                )}
-          </ul>
-          {((currentList !== "all"
-            ? listData?.total_pages
-            : allData?.total_pages) ?? 0) > 1 && (
-            <Pagination
-              updatePage={(page) =>
-                setSearchParams((searchParams) => {
-                  searchParams.set("page", String(page));
-                  return searchParams;
-                })
-              }
-              page={currentPage}
-              totalPage={
-                ((currentList !== "all"
-                  ? listData?.total_pages
-                  : allData?.total_pages) ?? 0) > MAXPAGE
-                  ? MAXPAGE
-                  : ((currentList !== "all"
-                      ? listData?.total_pages
-                      : allData?.total_pages) ?? 0)
-              }
-            />
-          )}
-        </div>
-      </div>
+      </section>
     </div>
   );
 }
