@@ -101,7 +101,7 @@ const HeroNavigation = ({
         <button
           onClick={() => updateIndex(i)}
           key={i}
-          className={`h-3 rounded-full transition-all duration-300 ${currentIndex === i ? "bg-red-600 w-16" : "bg-white w-3"}`}
+          className={`h-3 transition-all border duration-300 ${currentIndex === i ? "bg-black w-16" : "bg-white w-3"}`}
         ></button>
       ))}
     </div>

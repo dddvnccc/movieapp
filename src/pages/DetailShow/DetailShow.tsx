@@ -1,9 +1,16 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { getDetailShow, getShowCredit, getExtra } from "../../utils/fetch";
+import {
+  getDetailShow,
+  getShowCredit,
+  getExtra,
+  getCollectionDetail,
+} from "../../utils/fetch";
 import type {
+  Collection,
   DetailVideo,
+  Season,
   ShowType,
   TrendingResponse,
 } from "../../types/fetch";
@@ -13,6 +20,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  User,
 } from "lucide-react";
 import { formatDate, generateRuntime } from "../../utils/utils";
 
@@ -157,13 +165,16 @@ function DetailShow() {
       <div id="about" className="bg-black pt-32 px-12">
         <div className="flex flex-col md:flex-row items-start gap-12 mt-12">
           <img
-            className="w-[200px] xl:w-[350px] rounded-lg"
+            className="w-[200px] xl:w-[350px]"
             src={IMAGE_CONFIG.base_url + "w342" + poster_path}
           />
           <div className="w-full">
-            <p className="text-pretty leading-loose text-neutral-400 max-w-[80%] font-light">
-              {overview}
-            </p>
+            <div>
+              <h3 className="font-semibold uppercase text-lg">synopsis</h3>
+              <p className="text-pretty text-lg leading-relaxed text-neutral-400 max-w-[80%] font-light mt-2">
+                {overview}
+              </p>
+            </div>
             <div className="mt-8">
               <ShowMetadata
                 title="original title"
@@ -205,29 +216,99 @@ function DetailShow() {
                   }
                 />
               )}
+              <ShowMetadata title="status" data={status} />
+              <ShowMetadata
+                title="origin country"
+                data={detailData?.origin_country.join(", ")}
+              />
             </div>
           </div>
         </div>
       </div>
-      <div className="px-12 pt-32 bg-black">
-        <h2 className="text-3xl font-bold uppercase">Cast</h2>
+      <div className="px-12 pt-32 pb-16 bg-black">
+        <div className="flex items-center gap-4 justify-between">
+          <h2 className="text-3xl font-bold uppercase">Cast & Crew</h2>
+          <button>see all</button>
+        </div>
         <ul className="flex gap-8 items-start overflow-x-auto mt-8 hide-scrollbar">
-          {creditData?.cast.slice(0, 10).map((item) => (
+          {creditData?.cast.slice(0, 5).map((item) => (
             <li key={item.credit_id} className="min-w-[150px]">
               <img
                 className="h-[180px] rounded-lg w-full object-cover"
                 src={IMAGE_CONFIG.base_url + "w185" + item.profile_path}
               />
-              <h3 className="truncate">{item.name}</h3>
+              <div>
+                <h3 className="truncate">{item.name}</h3>
+                <p className="truncate">{item.character}</p>
+              </div>
             </li>
           ))}
+          {Array.from(
+            new Map(creditData?.crew.map((item) => [item.job, item])).values(),
+          )
+            .slice(0, 5)
+            .map((item) => (
+              <li key={item.credit_id} className="min-w-[150px]">
+                {!item.profile_path ? (
+                  <div className="flex items-center justify-center bg-black h-[180px] border border-white/20">
+                    <User />
+                  </div>
+                ) : (
+                  <img
+                    className="h-[180px] rounded-lg w-full object-cover"
+                    src={IMAGE_CONFIG.base_url + "w185" + item.profile_path}
+                  />
+                )}
+                <div>
+                  <h3 className="truncate">{item.name}</h3>
+                  <p className="truncate">{item.job}</p>
+                </div>
+              </li>
+            ))}
         </ul>
       </div>
+      {isMovie && detailData.belongs_to_collection && (
+        <Collection collection={detailData.belongs_to_collection} />
+      )}
+      {!isMovie && (detailData?.seasons.length ?? 0) > 1 && (
+        <Seasons data={detailData?.seasons ?? []} />
+      )}
       <Extras data={detailData?.videos?.results} />
       <ReccomendationSection data={recommendationData} />
     </div>
   );
 }
+
+const Collection = ({ collection }: { collection: Collection }) => {
+  const { data: collectionData } = useQuery({
+    queryKey: ["collection", collection.id],
+    queryFn: () => getCollectionDetail(collection.id),
+  });
+  return (
+    <section className="relative bg-black">
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-black/40"></div>
+        <img
+          className="w-full h-full object-cover"
+          src={IMAGE_CONFIG.base_url + "w1280" + collectionData?.backdrop_path}
+        />
+      </div>
+      <div className="relative z-10 px-12 py-16">
+        <h3 className="font-bold text-3xl">Discover {collectionData?.name}</h3>
+        <p className="leading-relaxed mt-4 text-lg xl:max-w-[60%]">
+          {collectionData?.overview}
+        </p>
+        <ul className="flex items-start gap-4 overflow-x-auto mt-12 hide-scrollbar">
+          {collectionData?.parts.map((item) => (
+            <li className="min-w-[300px]" key={item.id}>
+              <img src={IMAGE_CONFIG.base_url + "w342" + item.poster_path} />
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+};
 
 const Extras = ({ data }: { data: DetailVideo[] | undefined }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -303,12 +384,27 @@ const Extras = ({ data }: { data: DetailVideo[] | undefined }) => {
       </div>
       <ul className="hide-scrollbar flex items-start gap-4 overflow-x-auto mt-8">
         {filteredData?.map((item) => (
-          <li key={item.id} className="min-w-[350px]">
+          <li key={item.id} className="min-w-[450px]">
             <img
               className="w-full"
               src={`https://i.ytimg.com/vi/${item.key}/mqdefault.jpg`}
             />
             <h3 className="truncate">{item.type}</h3>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+};
+
+const Seasons = ({ data }: { data: Season[] }) => {
+  return (
+    <section className="px-12 pt-12 bg-black">
+      <h3>Season List</h3>
+      <ul className="flex items-start gap-4 overflow-x-auto hide-scrollbar">
+        {data.map((item) => (
+          <li className="min-w-[185px]" key={item.id}>
+            <img src={IMAGE_CONFIG.base_url + "w185" + item.poster_path} />
           </li>
         ))}
       </ul>
@@ -322,8 +418,11 @@ const ReccomendationSection = ({
   data: TrendingResponse | undefined;
 }) => {
   const ref = useRef<HTMLUListElement>(null);
+  const [isStart, setIsStart] = useState(false);
+  const [isEnd, setIsEnd] = useState(false);
   const handleClick = (route: string) => {
     if (!ref.current) return;
+    console.log(ref.current);
     const direction = route === "next" ? 1 : -1;
     const destination =
       ref.current.scrollLeft + ref.current.offsetWidth * 0.8 * direction;
@@ -332,26 +431,43 @@ const ReccomendationSection = ({
       behavior: "smooth",
     });
   };
+
+  const handleScroll = (e: React.UIEvent<HTMLUListElement>) => {
+    const { scrollLeft, scrollWidth, offsetWidth } = e.currentTarget;
+    setIsStart(scrollLeft <= 150);
+    setIsEnd(scrollLeft >= scrollWidth - offsetWidth - 150);
+  };
   return (
     <section className="px-12 pt-12 bg-black">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold uppercase">you may also like</h2>
         <div className="flex items-center gap-4">
-          <button onClick={() => handleClick("back")}>
+          {isEnd}
+          <button
+            className="disabled:text-neutral-500 text-white"
+            disabled={isStart}
+            onClick={() => handleClick("back")}
+          >
             <ChevronLeft />
           </button>
-          <button onClick={() => handleClick("next")}>
+          <button
+            className="disabled:text-neutral-500 text-white"
+            disabled={isEnd}
+            onClick={() => handleClick("next")}
+          >
             <ChevronRight />
           </button>
         </div>
       </div>
       <ul
+        onScroll={handleScroll}
         ref={ref}
-        className="flex gap-8 items-start overflow-x-auto mt-8 hide-scrollbar"
+        className="flex gap-4 items-start overflow-x-auto py-8 hide-scrollbar"
       >
         {recommendationData?.results.map((item) => (
-          <li key={item.id} className="min-w-[200px]">
+          <li key={item.id} className="w-[200px] shrink-0">
             <img
+              className="w-full h-[300px] object-cover"
               src={IMAGE_CONFIG.secure_base_url + "w185" + item.poster_path}
             />
             <Link to={`/${item.media_type}/detail/${item.id}`}>
@@ -378,7 +494,7 @@ const ShowMetadata = ({
       <h3 className="font-semibold uppercase text-sm text-neutral-400">
         {title}
       </h3>
-      <p className="font-bold text-right">{data}</p>
+      <p className="font-bold text-right capitalize">{data}</p>
     </div>
   );
 };
