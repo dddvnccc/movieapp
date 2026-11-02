@@ -1,15 +1,16 @@
 import axios from "axios";
 const AUTH_KEY = import.meta.env.VITE_TMDB_AUTH_KEY;
-import type {
-  TrendingResponse,
-  Genre,
-  SearchResponse,
-  DetailMovie,
-  DetailTv,
-  ShowType,
-  ShowCredit,
-  DetailCollection,
-  Country,
+import {
+  type TrendingResponse,
+  type Genre,
+  type SearchResponse,
+  type DetailMovie,
+  type DetailTv,
+  type ShowType,
+  type ShowCredit,
+  type DetailCollection,
+  type Country,
+  type ReviewResult,
 } from "../types/fetch";
 
 const headers = {
@@ -251,6 +252,24 @@ export async function getAllCountry(): Promise<Country[]> {
 
   try {
     const { data } = await axios.request<Country[]>(options);
+    console.log(data);
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
+export async function getReview(show_type: ShowType, show_id: number): Promise<ReviewResult> {
+  const options = {
+    method: "GET",
+    url: `https://api.themoviedb.org/3/${show_type}/${show_id}/reviews`,
+    params: { language: "en-US", page: "1" },
+    headers,
+  };
+
+  try {
+    const { data } = await axios.request<ReviewResult>(options);
     console.log(data);
     return data;
   } catch (error) {

@@ -6,6 +6,7 @@ import {
   getShowCredit,
   getExtra,
   getCollectionDetail,
+  getReview,
 } from "../../utils/fetch";
 import type {
   Collection,
@@ -17,12 +18,15 @@ import type {
 import { IMAGE_CONFIG } from "../../utils/config";
 import {
   ArrowBigDown,
+  ArrowLeft,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   User,
+  X,
 } from "lucide-react";
 import { formatDate, generateRuntime } from "../../utils/utils";
+import Credit from "../../components/Credit";
 
 function DetailShow() {
   const { media_type, show_id } = useParams<{
@@ -118,6 +122,9 @@ function DetailShow() {
   return (
     <div className="">
       <div className="h-screen relative group/hero">
+        <Link to={"/"} className="absolute z-50 right-12 top-12 border p-2">
+          <X size={30} />
+        </Link>
         <div className="bg-black/30 absolute inset-0 flex justify-center flex-col gap-4 p-4 md:px-12">
           <button
             onClick={scrollToSection}
@@ -162,64 +169,65 @@ function DetailShow() {
           src={IMAGE_CONFIG.base_url + "original" + backdrop_path}
         />
       </div>
-      <div id="about" className="bg-black pt-32 px-12">
-        <div className="flex flex-col md:flex-row items-start gap-12 mt-12">
+      <div id="about" className="bg-black pt-24 px-6 md:px-12">
+        <div className="flex items-start gap-12">
           <img
-            className="w-[200px] xl:w-[350px]"
-            src={IMAGE_CONFIG.base_url + "w342" + poster_path}
+            className="border border-neutral-800"
+            src={IMAGE_CONFIG.base_url + "w342" + detailData?.poster_path}
           />
           <div className="w-full">
-            <div>
-              <h3 className="font-semibold uppercase text-lg">synopsis</h3>
-              <p className="text-pretty text-lg leading-relaxed text-neutral-400 max-w-[80%] font-light mt-2">
-                {overview}
-              </p>
-            </div>
-            <div className="mt-8">
+            <div className="grid grid-cols-2 gap-4 w-full">
               <ShowMetadata
                 title="original title"
                 data={
                   isMovie
-                    ? detailData?.original_title
+                    ? detailData.original_title
                     : detailData?.original_name
                 }
               />
               <ShowMetadata
                 title="release date"
-                data={formatDate(releaseDate ?? "")}
+                data={formatDate(
+                  isMovie
+                    ? detailData.release_date
+                    : (detailData?.first_air_date ?? ""),
+                )}
               />
               <ShowMetadata
-                title={isMovie ? "duration" : "total seasons"}
+                title={isMovie ? "duration" : "number of seasons"}
                 data={
                   isMovie
-                    ? generateRuntime(detailData?.runtime)
+                    ? generateRuntime(detailData.runtime)
                     : `${detailData?.number_of_seasons} season${(detailData?.number_of_seasons ?? 0) > 2 ? "s" : ""}`
                 }
               />
               {isMovie && (
-                <ShowMetadata
-                  title="budget"
-                  data={isMovie && detailData?.budget}
-                />
+                <ShowMetadata title="budget" data={detailData.budget} />
               )}
               {isMovie && (
-                <ShowMetadata
-                  title="revenue"
-                  data={isMovie && detailData?.revenue}
-                />
+                <ShowMetadata title="revenue" data={detailData.revenue} />
               )}
               {!isMovie && (
                 <ShowMetadata
-                  title="total episodes"
-                  data={
-                    !isMovie && `${detailData?.number_of_episodes} episodes`
-                  }
+                  title="number of episodes"
+                  data={detailData?.number_of_episodes + " episodes"}
                 />
               )}
-              <ShowMetadata title="status" data={status} />
               <ShowMetadata
                 title="origin country"
                 data={detailData?.origin_country.join(", ")}
+              />
+              <ShowMetadata title="status" data={detailData?.status} />
+              <ShowMetadata
+                title={isMovie ? "directed by" : "created by"}
+                data={
+                  isMovie
+                    ? creditData?.crew
+                        .filter((item) => item.job === "Director")
+                        .map((item) => item.name)
+                        .join(", ")
+                    : detailData?.created_by.map(item => item.name).join(', ')
+                }
               />
             </div>
           </div>
@@ -232,38 +240,14 @@ function DetailShow() {
         </div>
         <ul className="flex gap-8 items-start overflow-x-auto mt-8 hide-scrollbar">
           {creditData?.cast.slice(0, 5).map((item) => (
-            <li key={item.credit_id} className="min-w-[150px]">
-              <img
-                className="h-[180px] rounded-lg w-full object-cover"
-                src={IMAGE_CONFIG.base_url + "w185" + item.profile_path}
-              />
-              <div>
-                <h3 className="truncate">{item.name}</h3>
-                <p className="truncate">{item.character}</p>
-              </div>
-            </li>
+            <Credit data={item} key={item.credit_id} />
           ))}
           {Array.from(
             new Map(creditData?.crew.map((item) => [item.job, item])).values(),
           )
             .slice(0, 5)
             .map((item) => (
-              <li key={item.credit_id} className="min-w-[150px]">
-                {!item.profile_path ? (
-                  <div className="flex items-center justify-center bg-black h-[180px] border border-white/20">
-                    <User />
-                  </div>
-                ) : (
-                  <img
-                    className="h-[180px] rounded-lg w-full object-cover"
-                    src={IMAGE_CONFIG.base_url + "w185" + item.profile_path}
-                  />
-                )}
-                <div>
-                  <h3 className="truncate">{item.name}</h3>
-                  <p className="truncate">{item.job}</p>
-                </div>
-              </li>
+              <Credit data={item} key={item.credit_id} />
             ))}
         </ul>
       </div>
@@ -275,6 +259,7 @@ function DetailShow() {
       )}
       <Extras data={detailData?.videos?.results} />
       <ReccomendationSection data={recommendationData} />
+      <Review media_type={media_type!} show_id={detailData?.id!} />
     </div>
   );
 }
@@ -386,10 +371,10 @@ const Extras = ({ data }: { data: DetailVideo[] | undefined }) => {
         {filteredData?.map((item) => (
           <li key={item.id} className="min-w-[450px]">
             <img
-              className="w-full"
+              className="w-full border border-neutral-600"
               src={`https://i.ytimg.com/vi/${item.key}/mqdefault.jpg`}
             />
-            <h3 className="truncate">{item.type}</h3>
+            <h3 className="truncate">{item.name}</h3>
           </li>
         ))}
       </ul>
@@ -398,16 +383,51 @@ const Extras = ({ data }: { data: DetailVideo[] | undefined }) => {
 };
 
 const Seasons = ({ data }: { data: Season[] }) => {
+  const [currentIndex, setcurrentIndex] = useState(data.length - 1);
+  const currentSeason = data[currentIndex];
+
+  const handleClick = (route: string) => {
+    if (
+      (currentIndex === 0 && route === "prev") ||
+      (currentIndex === data.length - 1 && route === "next")
+    )
+      return;
+    setcurrentIndex((prev) => (route === "next" ? prev + 1 : prev - 1));
+  };
   return (
-    <section className="px-12 pt-12 bg-black">
-      <h3>Season List</h3>
-      <ul className="flex items-start gap-4 overflow-x-auto hide-scrollbar">
-        {data.map((item) => (
-          <li className="min-w-[185px]" key={item.id}>
-            <img src={IMAGE_CONFIG.base_url + "w185" + item.poster_path} />
-          </li>
-        ))}
-      </ul>
+    <section className="relative py-12 bg-black">
+      <div className="relative flex items-center gap-12 p-8 bg-neutral-900 text-black">
+        <span className="absolute right-12 text-black top-12">
+          Current Season
+        </span>
+        <img
+          className="min-h-[450px] max-w-[342px] object-cover"
+          src={IMAGE_CONFIG.base_url + "w342" + currentSeason.poster_path}
+        />
+        <div className="absolute flex bottom-12 right-12">
+          <button
+            disabled={currentIndex === 0}
+            onClick={() => handleClick("prev")}
+          >
+            left
+          </button>
+          <button
+            disabled={currentIndex === data.length - 1}
+            onClick={() => handleClick("next")}
+          >
+            right
+          </button>
+        </div>
+        <div>
+          <span>{currentSeason.season_number}</span>
+          <h3 className="text-3xl font-bold">{currentSeason?.name}</h3>
+          <p className="text-lg line-clamp-3">
+            {currentSeason?.overview ?? "-"}
+          </p>
+          <p>{currentSeason?.episode_count} episodes</p>
+          {currentSeason?.air_date}
+        </div>
+      </div>
     </section>
   );
 };
@@ -418,7 +438,7 @@ const ReccomendationSection = ({
   data: TrendingResponse | undefined;
 }) => {
   const ref = useRef<HTMLUListElement>(null);
-  const [isStart, setIsStart] = useState(false);
+  const [isStart, setIsStart] = useState(true);
   const [isEnd, setIsEnd] = useState(false);
   const handleClick = (route: string) => {
     if (!ref.current) return;
@@ -434,15 +454,20 @@ const ReccomendationSection = ({
 
   const handleScroll = (e: React.UIEvent<HTMLUListElement>) => {
     const { scrollLeft, scrollWidth, offsetWidth } = e.currentTarget;
-    setIsStart(scrollLeft <= 150);
-    setIsEnd(scrollLeft >= scrollWidth - offsetWidth - 150);
+    setIsStart(scrollLeft <= 1);
+    setIsEnd(scrollLeft >= scrollWidth - offsetWidth - 1);
   };
+
+  useEffect(() => {
+    setIsStart(true);
+    setIsEnd(false);
+  }, [recommendationData]);
+
   return (
     <section className="px-12 pt-12 bg-black">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold uppercase">you may also like</h2>
         <div className="flex items-center gap-4">
-          {isEnd}
           <button
             className="disabled:text-neutral-500 text-white"
             disabled={isStart}
@@ -490,12 +515,41 @@ const ShowMetadata = ({
   data: string | number | undefined;
 }) => {
   return (
-    <div className="flex items-start justify-between border-b first:border-t border-white/20 py-4">
-      <h3 className="font-semibold uppercase text-sm text-neutral-400">
+    <div className="bg-neutral-950 border border-neutral-800 p-6 flex flex-col gap-4 w-full">
+      <h3 className="font-bold uppercase tracking-wider text-neutral-400">
         {title}
       </h3>
-      <p className="font-bold text-right capitalize">{data}</p>
+
+      <p title={data?.toString()} className="font-bold capitalize text-lg">
+        {data ?? "N/A"}
+      </p>
     </div>
+  );
+};
+
+const Review = ({
+  media_type,
+  show_id,
+}: {
+  media_type: ShowType;
+  show_id: number;
+}) => {
+  const { data } = useQuery({
+    queryKey: ["review", media_type, show_id],
+    queryFn: () => getReview(media_type, show_id),
+  });
+  return (
+    <section className="">
+      <h3>review</h3>
+      <ul>
+        {data?.results.map((item) => (
+          <li>
+            {item.author}
+            {item.author_details.rating}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 };
 

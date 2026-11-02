@@ -348,3 +348,43 @@ export interface Country {
   english_name: string;
   native_name: string;
 }
+
+export interface ReviewResult {
+  id
+  : number
+  page
+  : number
+  results: Review[]
+  total_pages
+  : number
+  total_results
+  : number
+}
+
+export interface Review {
+  author
+  : string
+  author_details: AuthorDetail
+  content
+  : string
+  created_at
+  : string
+  id
+  : string
+  updated_at
+  : string
+  url
+  : string
+}
+
+export interface AuthorDetail {
+  name
+  : string
+  username
+  : string
+  avatar_path
+  : string
+  rating
+  : number
+
+}

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useContext } from "react";
-import { Link, NavLink, useNavigate } from "react-router";
+import { Link, NavLink, useNavigate, useLocation } from "react-router";
 import {
   Home,
   Film,
@@ -29,7 +29,9 @@ function Navbar() {
   if (!context) {
     throw new Error("error");
   }
-
+  const location = useLocation();
+  const [isScroll, setIsScroll] = useState(false);
+  const isDetail = location.pathname.includes("detail");
   const { claims, clearClaims } = context;
   const menuRef = useRef<HTMLDivElement>(null);
   const [isModalActive, setIsModalActive] = useState(false);
@@ -53,6 +55,14 @@ function Navbar() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScroll(window.scrollY > 100);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -79,9 +89,12 @@ function Navbar() {
           handleClose={() => setIsLoginActive(false)}
         />
       </Portal>
-      <header className="fixed z-50 max-w-screen-lg w-auto inset-x-0 top-0 bottom-auto mx-4 sm:mx-auto p-3 px-8">
+      <header
+        style={{ display: isDetail ? "none" : "block" }}
+        className={`fixed z-50 mx-auto w-fit top-4 inset-x-0 bottom-auto p-2 px-8 border transition-all duration-300 ${isScroll ? "bg-black/40 border-white/10" : "bg-transparent border-transparent"}`}
+      >
         <nav className="flex items-center gap-6">
-          <span className="font-bold flex-1 md:flex-none">
+          <span className="font-bold text-2xl flex-1 md:flex-none">
             <span className="uppercase">temu</span>flix
           </span>
           <ul className="hidden md:flex items-center gap-2 flex-1">
@@ -92,7 +105,7 @@ function Navbar() {
                   <NavLink
                     to={item.href}
                     className={({ isActive }) =>
-                      `p-2 px-3 rounded-lg text-xs font-medium tracking-wide capitalize flex items-center gap-2 transition-colors duration-300 hover:text-[--main-white] ${isActive ? "text-[--main-white] bg-[--transparent-main]" : "text-white/40 bg-transparent"}`
+                      `p-2 px-3 font-medium tracking-wide capitalize flex items-center gap-2 transition-colors duration-300 ${isActive ? "text-black bg-white" : "text-neutral-200 bg-transparent hover:text-[--main-white]"}`
                     }
                   >
                     <Icon size={16} />
