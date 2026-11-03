@@ -12,6 +12,7 @@ import type {
   Collection,
   DetailVideo,
   Season,
+  ShowCredit,
   ShowType,
   TrendingResponse,
 } from "../../types/fetch";
@@ -51,6 +52,8 @@ function DetailShow() {
   const { data: recommendationData } = useQuery({
     queryKey: ["recommendation", media_type, show_id],
     queryFn: () => getExtra("recommendations", media_type!, Number(show_id)),
+    enabled: !!media_type && !!show_id,
+    staleTime: Infinity,
   });
   const {
     vote_average,
@@ -169,13 +172,19 @@ function DetailShow() {
           src={IMAGE_CONFIG.base_url + "original" + backdrop_path}
         />
       </div>
-      <div id="about" className="bg-black pt-24 px-6 md:px-12">
-        <div className="flex items-start gap-12">
+      <div id="about" className="bg-black pt-24 px-6 min-h-screen md:px-12">
+        <div className="flex items-start flex-col lg:flex-row gap-12">
           <img
             className="border border-neutral-800"
             src={IMAGE_CONFIG.base_url + "w342" + detailData?.poster_path}
           />
           <div className="w-full">
+            <div className="border border-neutral-800 bg-neutral-950 p-6 py-8 mb-8 flex flex-col gap-4">
+              <h3 className="uppercase font-bold text-lg text-neutral-400">
+                overview
+              </h3>
+              <p className="text-lg font-light tracking-wide">{overview}</p>
+            </div>
             <div className="grid grid-cols-2 gap-4 w-full">
               <ShowMetadata
                 title="original title"
@@ -226,31 +235,14 @@ function DetailShow() {
                         .filter((item) => item.job === "Director")
                         .map((item) => item.name)
                         .join(", ")
-                    : detailData?.created_by.map(item => item.name).join(', ')
+                    : detailData?.created_by.map((item) => item.name).join(", ")
                 }
               />
             </div>
           </div>
         </div>
       </div>
-      <div className="px-12 pt-32 pb-16 bg-black">
-        <div className="flex items-center gap-4 justify-between">
-          <h2 className="text-3xl font-bold uppercase">Cast & Crew</h2>
-          <button>see all</button>
-        </div>
-        <ul className="flex gap-8 items-start overflow-x-auto mt-8 hide-scrollbar">
-          {creditData?.cast.slice(0, 5).map((item) => (
-            <Credit data={item} key={item.credit_id} />
-          ))}
-          {Array.from(
-            new Map(creditData?.crew.map((item) => [item.job, item])).values(),
-          )
-            .slice(0, 5)
-            .map((item) => (
-              <Credit data={item} key={item.credit_id} />
-            ))}
-        </ul>
-      </div>
+      <CastCrew creditData={creditData} />
       {isMovie && detailData.belongs_to_collection && (
         <Collection collection={detailData.belongs_to_collection} />
       )}
@@ -292,6 +284,70 @@ const Collection = ({ collection }: { collection: Collection }) => {
         </ul>
       </div>
     </section>
+  );
+};
+
+const CastCrew = ({ creditData }: { creditData: ShowCredit }) => {
+  const [isActive, setIsActive] = useState(false);
+  useEffect(() => {
+    document.body.style.overflowY = isActive ? "hidden" : "";
+
+    return () => {
+      document.body.style.overflowY = "";
+    };
+  }, [isActive]);
+
+  return (
+    <div className="px-12 pt-32 pb-16 bg-black relative">
+      <div
+        onClick={() => setIsActive(false)}
+        className={`fixed inset-0 bg-red-400 z-50 flex items-center justify-center ${isActive ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+      >
+        <div className="bg-white border border-black max-h-[80vh] overflow-y-auto p-8 max-w-[80vw]">
+          <div className="">
+            <h2>cast</h2>
+            <ul className="text-black grid grid-cols-6 gap-4">
+              {creditData?.cast?.map((item) => (
+                <li key={item.id}>
+                  <h3>{item.name}</h3>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h2>crew</h2>
+            <ul className="text-black grid grid-cols-6 gap-4">
+              {creditData?.crew?.map((item) => (
+                <li key={item.credit_id} className="flex items-center gap-4">
+                  <img
+                    src={IMAGE_CONFIG.base_url + "w45" + item.profile_path}
+                  />
+                  <div>
+                    <h3>{item.name}</h3>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-4 justify-between">
+        <h2 className="text-3xl font-bold uppercase">Cast & Crew</h2>
+        <button onClick={() => setIsActive(true)}>see all</button>
+      </div>
+      <ul className="flex gap-8 items-start overflow-x-auto mt-8 hide-scrollbar">
+        {creditData?.cast.slice(0, 5).map((item) => (
+          <Credit data={item} key={item.credit_id} />
+        ))}
+        {Array.from(
+          new Map(creditData?.crew.map((item) => [item.job, item])).values(),
+        )
+          .slice(0, 5)
+          .map((item) => (
+            <Credit data={item} key={item.credit_id} />
+          ))}
+      </ul>
+    </div>
   );
 };
 
@@ -543,7 +599,7 @@ const Review = ({
       <h3>review</h3>
       <ul>
         {data?.results.map((item) => (
-          <li>
+          <li key={item.id}>
             {item.author}
             {item.author_details.rating}
           </li>
