@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, Link } from "react-router";
+import { useParams, Link, data } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
   getDetailShow,
@@ -20,6 +20,7 @@ import { IMAGE_CONFIG } from "../../utils/config";
 import {
   ArrowBigDown,
   ArrowLeft,
+  ArrowUp,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -30,6 +31,7 @@ import { formatDate, generateRuntime } from "../../utils/utils";
 import Credit from "../../components/Credit";
 
 function DetailShow() {
+  const [isScrolled, setIsScrolled] = useState(false);
   const { media_type, show_id } = useParams<{
     media_type: ShowType;
     show_id: string;
@@ -55,6 +57,7 @@ function DetailShow() {
     enabled: !!media_type && !!show_id,
     staleTime: Infinity,
   });
+
   const {
     vote_average,
     vote_count,
@@ -118,12 +121,33 @@ function DetailShow() {
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  useEffect(() => {
+    const castSection = document.querySelector<HTMLElement>("#cast");
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY >= (castSection?.offsetTop ?? 0));
+    };
+
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
   if (detailFetching) {
     return <div className="bg-black"></div>;
   }
 
   return (
-    <div className="">
+    <div className="relative">
+      {isScrolled && (
+        <button
+          onClick={() => scrollTo({ top: 0, behavior: "smooth" })}
+          className="bg-white border-2 border-black fixed bottom-4 right-4 z-50"
+        >
+          <ArrowUp className="text-black size-10" />
+        </button>
+      )}
       <div className="h-screen relative group/hero">
         <Link to={"/"} className="absolute z-50 right-12 top-12 border p-2">
           <X size={30} />
@@ -172,20 +196,22 @@ function DetailShow() {
           src={IMAGE_CONFIG.base_url + "original" + backdrop_path}
         />
       </div>
-      <div id="about" className="bg-black pt-24 px-6 min-h-screen md:px-12">
+      <div id="about" className="bg-black pt-24 px-6 md:px-12">
         <div className="flex items-start flex-col lg:flex-row gap-12">
           <img
             className="border border-neutral-800"
             src={IMAGE_CONFIG.base_url + "w342" + detailData?.poster_path}
           />
           <div className="w-full">
-            <div className="border border-neutral-800 bg-neutral-950 p-6 py-8 mb-8 flex flex-col gap-4">
+            <div className="border border-neutral-800 bg-neutral-950 p-6 py-8 mb-4 flex flex-col gap-4">
               <h3 className="uppercase font-bold text-lg text-neutral-400">
                 overview
               </h3>
-              <p className="text-lg font-light tracking-wide">{overview}</p>
+              <p className="leading-loose font-light text-neutral-400 line-clamp-3">
+                {overview}
+              </p>
             </div>
-            <div className="grid grid-cols-2 gap-4 w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 w-full">
               <ShowMetadata
                 title="original title"
                 data={
@@ -242,7 +268,8 @@ function DetailShow() {
           </div>
         </div>
       </div>
-      <CastCrew creditData={creditData} />
+      <Cast creditData={creditData} />
+      <Crew creditData={creditData} />
       {isMovie && detailData.belongs_to_collection && (
         <Collection collection={detailData.belongs_to_collection} />
       )}
@@ -287,8 +314,9 @@ const Collection = ({ collection }: { collection: Collection }) => {
   );
 };
 
-const CastCrew = ({ creditData }: { creditData: ShowCredit }) => {
+const Cast = ({ creditData }: { creditData: ShowCredit | undefined }) => {
   const [isActive, setIsActive] = useState(false);
+
   useEffect(() => {
     document.body.style.overflowY = isActive ? "hidden" : "";
 
@@ -298,32 +326,27 @@ const CastCrew = ({ creditData }: { creditData: ShowCredit }) => {
   }, [isActive]);
 
   return (
-    <div className="px-12 pt-32 pb-16 bg-black relative">
+    <div id="cast" className="px-12 pt-32 pb-16 bg-black relative">
       <div
         onClick={() => setIsActive(false)}
-        className={`fixed inset-0 bg-red-400 z-50 flex items-center justify-center ${isActive ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+        className={`fixed inset-0 z-50 flex items-center justify-center ${isActive ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
       >
-        <div className="bg-white border border-black max-h-[80vh] overflow-y-auto p-8 max-w-[80vw]">
+        <div className="bg-white border border-black max-h-[80vh] text-black overflow-y-auto p-8 min-w-[80vw] max-w-[80vw]">
           <div className="">
-            <h2>cast</h2>
-            <ul className="text-black grid grid-cols-6 gap-4">
+            <h2 className="uppercase font-bold text-lg">cast</h2>
+            <ul className="text-black grid grid-cols-3 gap-4">
               {creditData?.cast?.map((item) => (
-                <li key={item.id}>
-                  <h3>{item.name}</h3>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h2>crew</h2>
-            <ul className="text-black grid grid-cols-6 gap-4">
-              {creditData?.crew?.map((item) => (
-                <li key={item.credit_id} className="flex items-center gap-4">
+                <li
+                  key={item.id}
+                  className="flex items-center gap-4 bg-black text-white p-4"
+                >
                   <img
-                    src={IMAGE_CONFIG.base_url + "w45" + item.profile_path}
+                    className="w-20 h-20 object-cover"
+                    src={IMAGE_CONFIG.base_url + "w185" + item.profile_path}
                   />
                   <div>
                     <h3>{item.name}</h3>
+                    <p>{item.character}</p>
                   </div>
                 </li>
               ))}
@@ -332,20 +355,171 @@ const CastCrew = ({ creditData }: { creditData: ShowCredit }) => {
         </div>
       </div>
       <div className="flex items-center gap-4 justify-between">
-        <h2 className="text-3xl font-bold uppercase">Cast & Crew</h2>
+        <h2 className="text-3xl font-bold uppercase">Cast</h2>
         <button onClick={() => setIsActive(true)}>see all</button>
       </div>
-      <ul className="flex gap-8 items-start overflow-x-auto mt-8 hide-scrollbar">
-        {creditData?.cast.slice(0, 5).map((item) => (
-          <Credit data={item} key={item.credit_id} />
+      <ul className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-4 items-start mt-8">
+        {creditData?.cast.slice(0, 10).map((item) => (
+          <li
+            key={item.credit_id}
+            className="bg-neutral-950 border border-neutral-700 flex items-center gap-4"
+          >
+            <div className="w-24 h-24 border-r border-neutral-700">
+              {!item.profile_path ? (
+                <div className="bg-neutral-900 border h-full border-white">
+                  <User className="text-neutral-600" />
+                </div>
+              ) : (
+                <img
+                  className="object-cover h-full w-full"
+                  src={IMAGE_CONFIG.base_url + "w185" + item.profile_path}
+                />
+              )}
+            </div>
+            <div>
+              <h3 className="font-bold">{item.name}</h3>
+              <p className="font-light text-sm">{item.character}</p>
+            </div>
+          </li>
         ))}
-        {Array.from(
-          new Map(creditData?.crew.map((item) => [item.job, item])).values(),
-        )
-          .slice(0, 5)
-          .map((item) => (
-            <Credit data={item} key={item.credit_id} />
-          ))}
+      </ul>
+    </div>
+  );
+};
+const Crew = ({ creditData }: { creditData: ShowCredit | undefined }) => {
+  const [isActive, setIsActive] = useState(false);
+  const [isSelectDepartment, setIsSelectDepartment] = useState(false);
+  const [currentDepartment, setCurrentDepartment] = useState<string>("");
+  const groupedCrew =
+    creditData?.crew?.reduce(
+      (acc, member) => {
+        if (!acc[member.department]) {
+          acc[member.department] = [];
+        }
+        acc[member.department].push(member);
+        return acc;
+      },
+      {} as Record<string, typeof creditData.crew>,
+    ) ?? {};
+  useEffect(() => {
+    document.body.style.overflowY = isActive ? "hidden" : "";
+    return () => {
+      document.body.style.overflowY = "";
+    };
+  }, [isActive]);
+  useEffect(() => {
+    if (!currentDepartment) {
+      const departments = Object.keys(groupedCrew ?? {}).sort((a, b) =>
+        a.localeCompare(b),
+      );
+
+      if (departments.length > 0) {
+        setCurrentDepartment(departments[0]);
+      }
+    }
+  }, [currentDepartment, groupedCrew]);
+
+  return (
+    <div id="crew" className="px-12 pt-32 pb-16 bg-black relative">
+      <div
+        onClick={() => setIsActive(false)}
+        className={`fixed inset-0 z-50 flex items-center justify-center ${isActive ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+      >
+        <div className="bg-white border border-black max-h-[80vh] text-black overflow-y-auto p-8 min-w-[80vw] max-w-[80vw]">
+          <div className="">
+            <h2 className="uppercase font-bold text-lg">cast</h2>
+            <ul className="text-black grid grid-cols-3 gap-4">
+              {creditData?.cast?.map((item) => (
+                <li
+                  key={item.id}
+                  className="flex items-center gap-4 bg-black text-white p-4"
+                >
+                  <img
+                    className="w-20 h-20 object-cover"
+                    src={IMAGE_CONFIG.base_url + "w185" + item.profile_path}
+                  />
+                  <div>
+                    <h3>{item.name}</h3>
+                    <p>{item.character}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h2>crew</h2>
+            {Object.entries(groupedCrew ?? {})?.map(([job, member]) => (
+              <div key={job} className="flex flex-col gap-4">
+                <h3>{job}</h3>
+                <ul className="flex flex-wrap gap-4 text-black">
+                  {member.map((item) => (
+                    <li
+                      key={item.credit_id}
+                      className="flex items-center shrink-0 gap-4"
+                    >
+                      <h3>{item.name}</h3>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-4 justify-between">
+        <h2 className="text-3xl font-bold uppercase">Crew</h2>
+        <div className="relative min-w-72">
+          <button
+            onClick={() => setIsSelectDepartment(!isSelectDepartment)}
+            className="flex items-center gap-4 w-full justify-between bg-white text-black p-4 py-3 font-semibold text-lg"
+          >
+            {currentDepartment} <ChevronDown />
+          </button>
+          <ul
+            className={`absolute flex flex-col right-0 w-full mt-4 bg-white text-black z-50 ${isSelectDepartment ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+          >
+            {Object.keys(groupedCrew ?? {})
+              .sort((a, b) => a.localeCompare(b))
+              .map((item) => (
+                <li key={item} className="w-full">
+                  <button
+                    className="text-left px-4 py-2 first:pt-4 last:pb-4 w-full"
+                    onClick={() => {
+                      setCurrentDepartment(item);
+                      setIsSelectDepartment(false);
+                    }}
+                  >
+                    {item}
+                  </button>
+                </li>
+              ))}
+          </ul>
+        </div>
+      </div>
+      <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,350px),1fr))] gap-4 items-start mt-8">
+        {groupedCrew[currentDepartment]?.map((item) => (
+          <li
+            key={item.credit_id}
+            className="bg-neutral-950 border border-neutral-700 flex items-center"
+          >
+            <div className="w-24 h-24 border-r border-neutral-700 shrink-0">
+              {!item.profile_path ? (
+                <div className="bg-neutral-900 h-full w-full flex items-center justify-center">
+                  <User className="text-neutral-600" />
+                </div>
+              ) : (
+                <img
+                  className="object-cover h-full w-full"
+                  src={IMAGE_CONFIG.base_url + "w185" + item.profile_path}
+                />
+              )}
+            </div>
+            <div className="px-4">
+              <h3 className="font-bold">{item.name}</h3>
+              <p className="font-light text-sm">{item.job}</p>
+            </div>
+          </li>
+        ))}
       </ul>
     </div>
   );
@@ -572,11 +746,11 @@ const ShowMetadata = ({
 }) => {
   return (
     <div className="bg-neutral-950 border border-neutral-800 p-6 flex flex-col gap-4 w-full">
-      <h3 className="font-bold uppercase tracking-wider text-neutral-400">
+      <h3 className="font-bold uppercase tracking-wider text-neutral-400 text-sm">
         {title}
       </h3>
 
-      <p title={data?.toString()} className="font-bold capitalize text-lg">
+      <p title={data?.toString()} className="font-bold capitalize">
         {data ?? "N/A"}
       </p>
     </div>
