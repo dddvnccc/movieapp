@@ -197,21 +197,16 @@ function DetailShow() {
         />
       </div>
       <div id="about" className="bg-black pt-24 px-6 md:px-12">
-        <div className="flex items-start flex-col lg:flex-row gap-12">
+        <div className="flex items-start gap-12">
           <img
-            className="border border-neutral-800"
-            src={IMAGE_CONFIG.base_url + "w342" + detailData?.poster_path}
+            className="min-w-[30%] object-cover h-full border border-neutral-800"
+            src={IMAGE_CONFIG.base_url + "w500" + poster_path}
           />
-          <div className="w-full">
-            <div className="border border-neutral-800 bg-neutral-950 p-6 py-8 mb-4 flex flex-col gap-4">
-              <h3 className="uppercase font-bold text-lg text-neutral-400">
-                overview
-              </h3>
-              <p className="leading-loose font-light text-neutral-400 line-clamp-3">
-                {overview}
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 w-full">
+          <div className="flex flex-col gap-12 w-full">
+            {overview&& <p className="text-lg leading-relaxed text-neutral-400 line-clamp-3">
+              {overview}
+            </p>}
+            <div className="grid grid-cols-2 gap-8 gap-y-6 w-full">
               <ShowMetadata
                 title="original title"
                 data={
@@ -220,20 +215,11 @@ function DetailShow() {
                     : detailData?.original_name
                 }
               />
-              <ShowMetadata
-                title="release date"
-                data={formatDate(
-                  isMovie
-                    ? detailData.release_date
-                    : (detailData?.first_air_date ?? ""),
-                )}
-              />
+              <ShowMetadata title="release date" data={releaseDate} />
               <ShowMetadata
                 title={isMovie ? "duration" : "number of seasons"}
                 data={
-                  isMovie
-                    ? generateRuntime(detailData.runtime)
-                    : `${detailData?.number_of_seasons} season${(detailData?.number_of_seasons ?? 0) > 2 ? "s" : ""}`
+                  isMovie ? detailData.runtime : detailData?.number_of_seasons
                 }
               />
               {isMovie && (
@@ -245,25 +231,10 @@ function DetailShow() {
               {!isMovie && (
                 <ShowMetadata
                   title="number of episodes"
-                  data={detailData?.number_of_episodes + " episodes"}
+                  data={detailData?.number_of_episodes}
                 />
               )}
-              <ShowMetadata
-                title="origin country"
-                data={detailData?.origin_country.join(", ")}
-              />
-              <ShowMetadata title="status" data={detailData?.status} />
-              <ShowMetadata
-                title={isMovie ? "directed by" : "created by"}
-                data={
-                  isMovie
-                    ? creditData?.crew
-                        .filter((item) => item.job === "Director")
-                        .map((item) => item.name)
-                        .join(", ")
-                    : detailData?.created_by.map((item) => item.name).join(", ")
-                }
-              />
+              <ShowMetadata title="status" data={status} />
             </div>
           </div>
         </div>
@@ -334,7 +305,7 @@ const Cast = ({ creditData }: { creditData: ShowCredit | undefined }) => {
         <div className="bg-white border border-black max-h-[80vh] text-black overflow-y-auto p-8 min-w-[80vw] max-w-[80vw]">
           <div className="">
             <h2 className="uppercase font-bold text-lg">cast</h2>
-            <ul className="text-black grid grid-cols-3 gap-4">
+            <ul className="text-black grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-4">
               {creditData?.cast?.map((item) => (
                 <li
                   key={item.id}
@@ -358,27 +329,20 @@ const Cast = ({ creditData }: { creditData: ShowCredit | undefined }) => {
         <h2 className="text-3xl font-bold uppercase">Cast</h2>
         <button onClick={() => setIsActive(true)}>see all</button>
       </div>
-      <ul className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-4 items-start mt-8">
+      <ul className="flex overflow-x-auto gap-4 items-start mt-8 hide-scrollbar">
         {creditData?.cast.slice(0, 10).map((item) => (
-          <li
-            key={item.credit_id}
-            className="bg-neutral-950 border border-neutral-700 flex items-center gap-4"
-          >
-            <div className="w-24 h-24 border-r border-neutral-700">
-              {!item.profile_path ? (
-                <div className="bg-neutral-900 border h-full border-white">
-                  <User className="text-neutral-600" />
-                </div>
-              ) : (
-                <img
-                  className="object-cover h-full w-full"
-                  src={IMAGE_CONFIG.base_url + "w185" + item.profile_path}
-                />
-              )}
+          <li key={item.credit_id} className="flex flex-col gap-4">
+            <div className="w-52 h-52 object-cover">
+              <img
+                className="w-full h-full object-cover"
+                src={IMAGE_CONFIG.base_url + "w185" + item.profile_path}
+              />
             </div>
             <div>
               <h3 className="font-bold">{item.name}</h3>
-              <p className="font-light text-sm">{item.character}</p>
+              <p className="text-sm font-light text text-neutral-400">
+                {item.character}
+              </p>
             </div>
           </li>
         ))}
@@ -745,12 +709,15 @@ const ShowMetadata = ({
   data: string | number | undefined;
 }) => {
   return (
-    <div className="bg-neutral-950 border border-neutral-800 p-6 flex flex-col gap-4 w-full">
-      <h3 className="font-bold uppercase tracking-wider text-neutral-400 text-sm">
+    <div className="border-t border-neutral-800 pt-6 flex flex-col gap-3 w-full">
+      <h3 className="uppercase tracking-widest font-semibold text-slate-400 text-xs">
         {title}
       </h3>
 
-      <p title={data?.toString()} className="font-bold capitalize">
+      <p
+        title={data?.toString()}
+        className="font-bold capitalize text-xl text-neutral-200"
+      >
         {data ?? "N/A"}
       </p>
     </div>
