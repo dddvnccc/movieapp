@@ -7,14 +7,17 @@ import {
   getExtra,
   getCollectionDetail,
   getReview,
+  getWatchProvider,
 } from "../../utils/fetch";
 import type {
   Collection,
   DetailVideo,
+  ProviderMethod,
   Season,
   ShowCredit,
   ShowType,
   TrendingResponse,
+  WatchProviderResult,
 } from "../../types/fetch";
 import { IMAGE_CONFIG } from "../../utils/config";
 import {
@@ -27,11 +30,14 @@ import {
   User,
   X,
 } from "lucide-react";
-import { formatDate, generateRuntime } from "../../utils/utils";
-import Credit from "../../components/Credit";
+import { formatCurrency, formatDate, generateRuntime } from "../../utils/utils";
+
+import Hero from "../../components/DetailShow/Hero";
+import About from "../../components/DetailShow/About";
 
 function DetailShow() {
   const [isScrolled, setIsScrolled] = useState(false);
+  const castRef = useRef<HTMLDivElement>(null);
   const { media_type, show_id } = useParams<{
     media_type: ShowType;
     show_id: string;
@@ -54,6 +60,13 @@ function DetailShow() {
   const { data: recommendationData } = useQuery({
     queryKey: ["recommendation", media_type, show_id],
     queryFn: () => getExtra("recommendations", media_type!, Number(show_id)),
+    enabled: !!media_type && !!show_id,
+    staleTime: Infinity,
+  });
+
+  const { data: watchProviderData } = useQuery({
+    queryKey: ["watch_providers", media_type, show_id],
+    queryFn: () => getWatchProvider(media_type!, Number(show_id)),
     enabled: !!media_type && !!show_id,
     staleTime: Infinity,
   });
@@ -100,7 +113,6 @@ function DetailShow() {
       );
     }
   };
-
   const tvRating = () => {
     if (!isMovie) {
       const ratings = detailData?.content_ratings?.results ?? [];
@@ -115,23 +127,16 @@ function DetailShow() {
     }
   };
 
-  const scrollToSection = () => {
-    document
-      .querySelector("#about")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const getCrew = (job: string) => {
+    return creditData?.crew.filter((item) => item.job === job);
   };
 
   useEffect(() => {
-    const castSection = document.querySelector<HTMLElement>("#cast");
     const handleScroll = () => {
-      setIsScrolled(window.scrollY >= (castSection?.offsetTop ?? 0));
+      setIsScrolled(window.scrollY >= window.innerHeight);
     };
-
     window.addEventListener("scroll", handleScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   if (detailFetching) {
@@ -148,97 +153,18 @@ function DetailShow() {
           <ArrowUp className="text-black size-10" />
         </button>
       )}
-      <div className="h-screen relative group/hero">
-        <Link to={"/"} className="absolute z-50 right-12 top-12 border p-2">
-          <X size={30} />
-        </Link>
-        <div className="bg-black/30 absolute inset-0 flex justify-center flex-col gap-4 p-4 md:px-12">
-          <button
-            onClick={scrollToSection}
-            className="absolute bottom-8 inset-x-1/2 transition-all opacity-0 duration-300 group-hover/hero:opacity-100"
-          >
-            <ArrowBigDown />
-          </button>
-          <h1
-            className={`font-bold uppercase leading-none max-w-[60%] ${(title?.length ?? 0) > 30 ? "text-[2rem] lg:text-[4rem]" : "text-[4rem] lg:text-[6rem]"}`}
-          >
-            {title}
-          </h1>
-          <div className="flex items-center gap-4">
-            {genres?.map((item) => (
-              <span key={item.id} className="font-semibold text-lg">
-                {item.name}
-              </span>
-            ))}
-          </div>
-          <div className="flex items-center gap-6 mt-2 text-xl">
-            <p className="p-3.5 bg-white text-black w-fit font-extrabold leading-none">
-              {vote_average?.toFixed(1)}
-            </p>
-            <p className="p-3.5 bg-white text-black w-fit font-extrabold leading-none">
-              {(isMovie
-                ? moviesRating()?.release_dates[0].certification
-                : tvRating()?.rating) ?? "No rating"}
-            </p>
-          </div>
-
-          <div className="absolute bottom-8 flex items-center opacity-0 gap-8 transition-all duration-300 group-hover/hero:opacity-100 delay-75">
-            <button className="border p-4 px-6 leading-none uppercase transition-all duration-200 hover:bg-white hover:text-black">
-              play trailer
-            </button>
-            <button className="group overflow-hidden rounded-lg text-white font-semibold">
-              Add to list
-            </button>
-          </div>
-        </div>
-        <img
-          className="w-full h-full object-cover"
-          src={IMAGE_CONFIG.base_url + "original" + backdrop_path}
-        />
-      </div>
-      <div id="about" className="bg-black pt-24 px-6 md:px-12">
-        <div className="flex items-start gap-12">
-          <img
-            className="min-w-[30%] object-cover h-full border border-neutral-800"
-            src={IMAGE_CONFIG.base_url + "w500" + poster_path}
-          />
-          <div className="flex flex-col gap-12 w-full">
-            {overview&& <p className="text-lg leading-relaxed text-neutral-400 line-clamp-3">
-              {overview}
-            </p>}
-            <div className="grid grid-cols-2 gap-8 gap-y-6 w-full">
-              <ShowMetadata
-                title="original title"
-                data={
-                  isMovie
-                    ? detailData.original_title
-                    : detailData?.original_name
-                }
-              />
-              <ShowMetadata title="release date" data={releaseDate} />
-              <ShowMetadata
-                title={isMovie ? "duration" : "number of seasons"}
-                data={
-                  isMovie ? detailData.runtime : detailData?.number_of_seasons
-                }
-              />
-              {isMovie && (
-                <ShowMetadata title="budget" data={detailData.budget} />
-              )}
-              {isMovie && (
-                <ShowMetadata title="revenue" data={detailData.revenue} />
-              )}
-              {!isMovie && (
-                <ShowMetadata
-                  title="number of episodes"
-                  data={detailData?.number_of_episodes}
-                />
-              )}
-              <ShowMetadata title="status" data={status} />
-            </div>
-          </div>
-        </div>
-      </div>
+      <Hero
+        title={title ?? ""}
+        genres={genres ?? []}
+        vote_average={Number(vote_average?.toFixed(1)) ?? 0}
+        certification={
+          (isMovie
+            ? moviesRating()?.release_dates[0].certification
+            : tvRating()?.rating) ?? "No rating"
+        }
+        backdrop_path={backdrop_path ?? ""}
+      />
+      <About show_id={show_id!} show_type={media_type!} getCrew={(job) =>getCrew(job)} />
       <Cast creditData={creditData} />
       <Crew creditData={creditData} />
       {isMovie && detailData.belongs_to_collection && (
@@ -698,29 +624,6 @@ const ReccomendationSection = ({
         ))}
       </ul>
     </section>
-  );
-};
-
-const ShowMetadata = ({
-  title,
-  data,
-}: {
-  title: string;
-  data: string | number | undefined;
-}) => {
-  return (
-    <div className="border-t border-neutral-800 pt-6 flex flex-col gap-3 w-full">
-      <h3 className="uppercase tracking-widest font-semibold text-slate-400 text-xs">
-        {title}
-      </h3>
-
-      <p
-        title={data?.toString()}
-        className="font-bold capitalize text-xl text-neutral-200"
-      >
-        {data ?? "N/A"}
-      </p>
-    </div>
   );
 };
 

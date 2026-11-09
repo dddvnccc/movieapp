@@ -11,6 +11,8 @@ import {
   type DetailCollection,
   type Country,
   type ReviewResult,
+  type WatchProviderResults,
+  type WatchProviderResult,
 } from "../types/fetch";
 
 const headers = {
@@ -260,7 +262,10 @@ export async function getAllCountry(): Promise<Country[]> {
   }
 }
 
-export async function getReview(show_type: ShowType, show_id: number): Promise<ReviewResult> {
+export async function getReview(
+  show_type: ShowType,
+  show_id: number,
+): Promise<ReviewResult> {
   const options = {
     method: "GET",
     url: `https://api.themoviedb.org/3/${show_type}/${show_id}/reviews`,
@@ -270,6 +275,27 @@ export async function getReview(show_type: ShowType, show_id: number): Promise<R
 
   try {
     const { data } = await axios.request<ReviewResult>(options);
+    console.log(data);
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
+export async function getWatchProvider(
+  show_type: ShowType,
+  show_id: number,
+): Promise<WatchProviderResults> {
+  const options = {
+    method: "GET",
+    url: `https://api.themoviedb.org/3/${show_type}/${show_id}/watch/providers`,
+    params: { language: "en-US" },
+    headers,
+  };
+
+  try {
+    const { data } = await axios.request<WatchProviderResults>(options);
     console.log(data);
     return data;
   } catch (error) {

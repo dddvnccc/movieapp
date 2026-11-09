@@ -350,41 +350,231 @@ export interface Country {
 }
 
 export interface ReviewResult {
-  id
-  : number
-  page
-  : number
-  results: Review[]
-  total_pages
-  : number
-  total_results
-  : number
+  id: number;
+  page: number;
+  results: Review[];
+  total_pages: number;
+  total_results: number;
 }
 
 export interface Review {
-  author
-  : string
-  author_details: AuthorDetail
-  content
-  : string
-  created_at
-  : string
-  id
-  : string
-  updated_at
-  : string
-  url
-  : string
+  author: string;
+  author_details: AuthorDetail;
+  content: string;
+  created_at: string;
+  id: string;
+  updated_at: string;
+  url: string;
 }
 
 export interface AuthorDetail {
-  name
-  : string
-  username
-  : string
-  avatar_path
-  : string
-  rating
-  : number
+  name: string;
+  username: string;
+  avatar_path: string;
+  rating: number;
+}
 
+export interface ProviderMethod {
+  logo_path: string;
+  provider_id: number;
+  provider_name: string;
+  display_priority: number;
+}
+
+export interface WatchProviderResult {
+  link: string;
+  flatrate?: ProviderMethod[];
+  rent?: ProviderMethod[];
+  buy?: ProviderMethod[];
+}
+
+export interface WatchProviderResults {
+  id: number;
+  results: {
+    AE: WatchProviderResult;
+    AL: WatchProviderResult;
+
+    AR: WatchProviderResult;
+    AT: WatchProviderResult;
+    AU: WatchProviderResult;
+    BA: WatchProviderResult;
+
+    BB: WatchProviderResult;
+
+    BE: WatchProviderResult;
+
+    BG: WatchProviderResult;
+
+    BH: WatchProviderResult;
+
+    BO: WatchProviderResult;
+
+    BR: WatchProviderResult;
+
+    BS: WatchProviderResult;
+
+    CA: WatchProviderResult;
+
+    CH: WatchProviderResult;
+
+    CL: WatchProviderResult;
+
+    CO: WatchProviderResult;
+
+    CR: WatchProviderResult;
+
+    CV: WatchProviderResult;
+
+    CZ: WatchProviderResult;
+
+    DE: WatchProviderResult;
+
+    DK: WatchProviderResult;
+
+    DO: WatchProviderResult;
+
+    EC: WatchProviderResult;
+
+    EE: WatchProviderResult;
+
+    EG: WatchProviderResult;
+
+    ES: WatchProviderResult;
+
+    FI: WatchProviderResult;
+
+    FJ: WatchProviderResult;
+
+    FR: WatchProviderResult;
+
+    GB: WatchProviderResult;
+
+    GF: WatchProviderResult;
+
+    GI: WatchProviderResult;
+
+    GR: WatchProviderResult;
+
+    GT: WatchProviderResult;
+
+    HK: WatchProviderResult;
+
+    HN: WatchProviderResult;
+
+    HR: WatchProviderResult;
+
+    HU: WatchProviderResult;
+
+    ID: WatchProviderResult;
+
+    IE: WatchProviderResult;
+
+    IL: WatchProviderResult;
+
+    IN: WatchProviderResult;
+
+    IQ: WatchProviderResult;
+
+    IS: WatchProviderResult;
+
+    IT: WatchProviderResult;
+
+    JM: WatchProviderResult;
+
+    JO: WatchProviderResult;
+
+    JP: WatchProviderResult;
+
+    KR: WatchProviderResult;
+
+    KW: WatchProviderResult;
+
+    LB: WatchProviderResult;
+
+    LI: WatchProviderResult;
+
+    LT: WatchProviderResult;
+
+    LV: WatchProviderResult;
+
+    MD: WatchProviderResult;
+
+    MK: WatchProviderResult;
+
+    MT: WatchProviderResult;
+
+    MU: WatchProviderResult;
+
+    MX: WatchProviderResult;
+
+    MY: WatchProviderResult;
+
+    MZ: WatchProviderResult;
+
+    NL: WatchProviderResult;
+
+    NO: WatchProviderResult;
+
+    NZ: WatchProviderResult;
+
+    OM: WatchProviderResult;
+
+    PA: WatchProviderResult;
+
+    PE: WatchProviderResult;
+
+    PH: WatchProviderResult;
+
+    PK: WatchProviderResult;
+
+    PL: WatchProviderResult;
+
+    PS: WatchProviderResult;
+
+    PT: WatchProviderResult;
+
+    PY: WatchProviderResult;
+
+    QA: WatchProviderResult;
+
+    RO: WatchProviderResult;
+
+    RS: WatchProviderResult;
+
+    RU: WatchProviderResult;
+
+    SA: WatchProviderResult;
+
+    SE: WatchProviderResult;
+
+    SG: WatchProviderResult;
+
+    SI: WatchProviderResult;
+
+    SK: WatchProviderResult;
+
+    SM: WatchProviderResult;
+
+    SV: WatchProviderResult;
+
+    TH: WatchProviderResult;
+
+    TR: WatchProviderResult;
+
+    TT: WatchProviderResult;
+
+    TW: WatchProviderResult;
+
+    UG: WatchProviderResult;
+
+    US: WatchProviderResult;
+
+    UY: WatchProviderResult;
+
+    VE: WatchProviderResult;
+
+    YE: WatchProviderResult;
+
+    ZA: WatchProviderResult;
+  };
 }
