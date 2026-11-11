@@ -1,8 +1,13 @@
-import React from "react";
+import { useEffect } from "react";
 import { IMAGE_CONFIG } from "../../utils/config";
 import { useQuery } from "@tanstack/react-query";
-import type { Crew, ShowType } from "../../types/fetch";
-import { getDetailShow,getWatchProvider } from "../../utils/fetch";
+import type {
+  Crew,
+  ProviderMethod,
+  ShowType,
+  WatchProviderResult,
+} from "../../types/fetch";
+import { getDetailShow, getWatchProvider } from "../../utils/fetch";
 import { formatDate, generateRuntime, formatCurrency } from "../../utils/utils";
 
 interface About {
@@ -25,11 +30,47 @@ function About({ show_type, show_id, getCrew }: About) {
     staleTime: Infinity,
   });
 
-  const { poster_path, overview, origin_country } = detailData ?? {};
+  const { poster_path, overview, origin_country, status } = detailData ?? {};
   const isMovie = detailData && "title" in detailData;
   const releaseDate = isMovie
     ? detailData.release_date
     : detailData?.first_air_date;
+
+  const allCountryProvider = Object.values(watchProviderData?.results ?? {});
+  const sortProvider = allCountryProvider.reduce(
+    (acc, item) => {
+      Object.entries(item).forEach(([k, v]) => {
+        if (k !== "link") {
+          acc[k] = Array.from(
+            new Map(
+              [...(acc[k] ?? []), ...(v ?? [])].map((item2) => [
+                item2.provider_id,
+                item2,
+              ]),
+            ).values(),
+          );
+        }
+      });
+      return acc;
+    },
+    {} as Record<string, ProviderMethod[]>,
+  );
+
+  const allProvider: ProviderMethod[] = [
+    ...new Map(
+      allCountryProvider
+        .flatMap((item) =>
+          Object.entries(item)
+            .filter(([k]) => k !== "link")
+            .flatMap(([, v]) => v),
+        )
+        .map((item) => [item.provider_id, item]),
+    ).values(),
+  ];
+  useEffect(() => {
+    console.log(allProvider);
+  }, [watchProviderData]);
+
   return (
     <div id="about" className="bg-black pt-24 px-6 md:px-12">
       <div className="flex items-start gap-12">
@@ -102,16 +143,18 @@ function About({ show_type, show_id, getCrew }: About) {
             />
             <ShowMetadata title="status" data={status} />
           </div>
-          <ul className="flex items-center gap-4">
-            {watchProviderData?.results[
-              origin_country?.[0] ?? "US" ?? "GB"
-            ]?.flatrate?.map((item: ProviderMethod) => (
-              <li key={item.provider_id}>
-                <a href="#" target="_blank" rel="noopener noreferrer"></a>
-                <img src={IMAGE_CONFIG.base_url + "w92" + item.logo_path} />
-              </li>
-            ))}
+          <h3>available on:</h3>
+          <ul className="flex gap-4 flex-wrap">
+            {allProvider
+              .sort((a, b) => a.display_priority - b.display_priority)
+              .slice(0, 5)
+              .map((item) => (
+                <li key={item.provider_id}>
+                  <img src={IMAGE_CONFIG.base_url + "w92" + item.logo_path} />
+                </li>
+              ))}
           </ul>
+              {allProvider.length > 5 && <button>see more</button>}
         </div>
       </div>
     </div>
